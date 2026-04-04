@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Shubham Tradelink{% endblock %}</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Apply saved theme BEFORE render to prevent flash -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#eef6ff',
+              100: '#d9eaff',
+              200: '#bcdaff',
+              300: '#8ec3ff',
+              400: '#59a1ff',
+              500: '#3380ff',
+              600: '#1a5ef5',
+              700: '#1349e1',
+              800: '#163db6',
+              900: '#18378f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Active nav link */
+    .nav-active {
+      background-color: rgba(51, 128, 255, 0.12);
+      color: #1a5ef5;
+    }
+    .dark .nav-active {
+      background-color: rgba(51, 128, 255, 0.2);
+      color: #59a1ff;
+    }
+
+    /* ─── Global dark mode overrides ──────────────────────────
+       These selectors automatically style all pages without
+       needing dark: classes on every template element.        */
+
+    /* Body / page background */
+    .dark body { background-color: #0f172a; color: #e2e8f0; }
+
+    /* White cards, panels, forms */
+    .dark .bg-white { background-color: #1e293b !important; }
+
+    /* Gray-50 backgrounds (page bg, table headers) */
+    .dark .bg-gray-50 { background-color: #0f172a !important; }
+
+    /* Borders */
+    .dark .border-gray-100 { border-color: #334155 !important; }
+    .dark .border-gray-200 { border-color: #334155 !important; }
+    .dark .border-gray-300 { border-color: #475569 !important; }
+
+    /* Dividers */
+    .dark .divide-gray-100 > :not(:last-child) { border-color: #334155 !important; }
+
+    /* Text colors */
+    .dark .text-gray-900 { color: #f1f5f9 !important; }
+    .dark .text-gray-800 { color: #e2e8f0 !important; }
+    .dark .text-gray-700 { color: #cbd5e1 !important; }
+    .dark .text-gray-600 { color: #94a3b8 !important; }
+    .dark .text-gray-500 { color: #94a3b8 !important; }
+    .dark .text-gray-400 { color: #64748b !important; }
+
+    /* Inputs & selects */
+    .dark input, .dark select, .dark textarea {
+      background-color: #0f172a !important;
+      border-color: #475569 !important;
+      color: #e2e8f0 !important;
+    }
+    .dark input::placeholder, .dark textarea::placeholder {
+      color: #64748b !important;
+    }
+    .dark input:focus, .dark select:focus, .dark textarea:focus {
+      border-color: #3380ff !important;
+    }
+
+    /* Hover states */
+    .dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+    .dark .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+
+    /* Colored badges (keep their colors but slightly darken bg in dark) */
+    .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; }
+    .dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; }
+    .dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.1) !important; }
+    .dark .bg-brand-50 { background-color: rgba(51, 128, 255, 0.1) !important; }
+
+    .dark .border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
+    .dark .border-green-200 { border-color: rgba(34, 197, 94, 0.3) !important; }
+    .dark .border-amber-200 { border-color: rgba(245, 158, 11, 0.3) !important; }
+    .dark .border-brand-100 { border-color: rgba(51, 128, 255, 0.3) !important; }
+
+    /* Toggle button */
+    .theme-toggle {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+  </style>
+</head>
+
+<body class="font-sans bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- ─── Top bar (mobile) ──────────────────────────────────── -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-30 lg:hidden">
+    <div class="flex items-center justify-between px-4 py-3">
+      <a href="/" class="text-base font-bold text-brand-700 flex items-center gap-2 whitespace-nowrap">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 6h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h1m4-2h4v2h-4V4z"/></svg>
+        Shubham Tradelink
+      </a>
+      <div class="flex items-center gap-2">
+        <!-- Dark mode toggle (mobile) -->
+        <button onclick="toggleTheme()" class="theme-toggle p-2 rounded-lg hover:bg-gray-100" aria-label="Toggle dark mode">
+          <svg id="sunIconMobile" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="moonIconMobile" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <!-- Shut down button -->
+        <form action="/shutdown" method="POST" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to shut down the application?');">
+          <button type="submit" class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label="Shut Down">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- ─── Sidebar (desktop) ──────────────────────────────── -->
+    <aside class="hidden lg:flex lg:flex-col w-64 bg-white border-r border-gray-200 fixed inset-y-0">
+      <div class="px-6 py-5 flex items-center justify-between">
+        <a href="/" class="text-lg font-bold text-brand-700 flex items-center gap-2 whitespace-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 6h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h1m4-2h4v2h-4V4z"/></svg>
+          Shubham Tradelink
+        </a>
+        <!-- Dark mode toggle (desktop) -->
+        <button onclick="toggleTheme()" class="theme-toggle p-2 rounded-lg hover:bg-gray-100" aria-label="Toggle dark mode">
+          <svg id="sunIconDesktop" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="moonIconDesktop" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+      </div>
+      <nav class="flex-1 px-4 space-y-1 text-sm font-medium">
+        <a href="/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if request.path == '/' %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+          Dashboard
+        </a>
+        <a href="/sales/add" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if request.path == '/sales/add' %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2m0-8c1.11 0 2.08.402 2.599 1M12 8c-1.11 0-2.08.402-2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          New Sale
+        </a>
+        <a href="/sales/history" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if request.path == '/sales/history' %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Sales History
+        </a>
+        <a href="/customers" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if '/customers' in request.path %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Customers
+        </a>
+        <a href="/inventory" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if '/inventory' in request.path %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Inventory
+        </a>
+        <a href="/warranties" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if '/warranties' in request.path %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Warranties
+        </a>
+        <a href="/mechanics" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {% if '/mechanics' in request.path %}nav-active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Mechanics
+        </a>
+      </nav>
+      <!-- User info & Logout (Desktop) -->
+      <div class="px-4 py-4 border-t border-gray-200 space-y-2">
+        <div class="flex items-center gap-3 px-3 py-2">
+          <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-bold">
+            {{ session.get('username', 'A')[0]|upper }}
+          </div>
+          <span class="text-sm font-medium text-gray-700">{{ session.get('username', 'Admin') }}</span>
+        </div>
+        <a href="/logout" class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- ─── Main content ───────────────────────────────────── -->
+    <main class="flex-1 lg:ml-64 pb-20 lg:pb-8">
+      <div class="max-w-5xl mx-auto px-4 py-6">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium
+                {% if category == 'error' %}bg-red-100 text-red-700 border border-red-200
+                {% elif category == 'success' %}bg-green-100 text-green-700 border border-green-200
+                {% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Bottom navigation (mobile) ────────────────────────── -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30">
+    <div class="flex justify-around py-2">
+      <a href="/" class="flex flex-col items-center gap-0.5 text-xs {% if request.path == '/' %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+        Home
+      </a>
+      <a href="/sales/add" class="flex flex-col items-center gap-0.5 text-xs {% if request.path == '/sales/add' %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/></svg>
+        Sale
+      </a>
+      <a href="/sales/history" class="flex flex-col items-center gap-0.5 text-xs {% if request.path == '/sales/history' %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        History
+      </a>
+      <a href="/customers" class="flex flex-col items-center gap-0.5 text-xs {% if '/customers' in request.path %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Customers
+      </a>
+      <a href="/inventory" class="flex flex-col items-center gap-0.5 text-xs {% if '/inventory' in request.path %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Stock
+      </a>
+      <a href="/warranties" class="flex flex-col items-center gap-0.5 text-xs {% if '/warranties' in request.path %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Warranty
+      </a>
+      <a href="/mechanics" class="flex flex-col items-center gap-0.5 text-xs {% if '/mechanics' in request.path %}text-brand-600 font-semibold{% else %}text-gray-500{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        Mechanic
+      </a>
+    </div>
+  </nav>
+
+  <!-- ─── Dark Mode Script ──────────────────────────────────── -->
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+      updateIcons();
+    }
+
+    function updateIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      // Show sun icon in dark mode (click to go light), moon icon in light mode (click to go dark)
+      document.querySelectorAll('[id^="sunIcon"]').forEach(el => el.classList.toggle('hidden', !isDark));
+      document.querySelectorAll('[id^="moonIcon"]').forEach(el => el.classList.toggle('hidden', isDark));
+    }
+
+    // Run on load
+    updateIcons();
+  </script>
+
+</body>
+</html>

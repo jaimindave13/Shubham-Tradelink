@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Mechanics — Shubham Tradelink{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Mechanics</h1>
+  <a href="/mechanics/add"
+     class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition flex items-center gap-1">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Add Mechanic
+  </a>
+</div>
+
+<!-- Total Outstanding -->
+{% if total_outstanding > 0 %}
+<div class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+  <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/></svg>
+  </div>
+  <div>
+    <p class="text-xs text-amber-600 font-medium">Total Outstanding</p>
+    <p class="text-xl font-bold text-amber-800">₹{{ "%.2f"|format(total_outstanding) }}</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- Search -->
+<form method="GET" action="/mechanics" class="mb-6">
+  <div class="flex gap-2">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name, phone, or shop..."
+           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+    <button type="submit"
+            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition">
+      Search
+    </button>
+    {% if query %}
+    <a href="/mechanics" class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 transition">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Mechanic List -->
+{% if mechanics %}
+<div class="space-y-3">
+  {% for m in mechanics %}
+  <a href="/mechanics/{{ m._id }}"
+     class="block bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="font-semibold text-gray-900">{{ m.name }}</h3>
+        <p class="text-xs text-gray-500">{{ m.shop_name or 'No shop name' }} · {{ m.phone }}</p>
+      </div>
+      <div class="text-right">
+        {% if m.balance > 0 %}
+          <p class="text-lg font-bold text-red-600">₹{{ "%.2f"|format(m.balance) }}</p>
+          <p class="text-xs text-red-400">pending</p>
+        {% elif m.balance == 0 and m.total_credit > 0 %}
+          <p class="text-lg font-bold text-green-600">✓ Settled</p>
+          <p class="text-xs text-green-400">no dues</p>
+        {% else %}
+          <p class="text-sm text-gray-400">No transactions</p>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+  {% if query %}
+    <p class="text-gray-400 text-sm">No mechanics match your search.</p>
+  {% else %}
+    <p class="text-gray-400 text-sm">No mechanics added yet. <a href="/mechanics/add" class="text-brand-600 underline">Add one →</a></p>
+  {% endif %}
+{% endif %}
+{% endblock %}

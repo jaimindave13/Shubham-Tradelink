@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Shubham Tradelink{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+
+<!-- ─── Stat Cards ──────────────────────────────────────── -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <!-- Sales Today -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-gray-500">Sales Today</p>
+      <p class="text-2xl font-bold text-gray-900">{{ total_sales_today }}</p>
+    </div>
+  </div>
+
+  <!-- Revenue Today -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2m0-8c1.11 0 2.08.402 2.599 1M12 8c-1.11 0-2.08.402-2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-gray-500">Revenue Today</p>
+      <p class="text-2xl font-bold text-gray-900">₹{{ "%.2f"|format(total_revenue_today) }}</p>
+    </div>
+  </div>
+
+  <!-- Mechanic Outstanding -->
+  <a href="/mechanics" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition">
+    <div class="flex items-center justify-center w-12 h-12 rounded-full {% if mechanic_outstanding > 0 %}bg-amber-100 text-amber-600{% else %}bg-green-100 text-green-600{% endif %}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-gray-500">Mechanic Dues</p>
+      <p class="text-2xl font-bold {% if mechanic_outstanding > 0 %}text-amber-700{% else %}text-green-700{% endif %}">₹{{ "%.2f"|format(mechanic_outstanding) }}</p>
+    </div>
+  </a>
+</div>
+
+<!-- ─── Low Stock Alerts ────────────────────────────────── -->
+{% if low_stock_items %}
+<div class="mb-8">
+  <h2 class="text-lg font-semibold mb-3 text-red-600 flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Low Stock Alerts
+  </h2>
+  <div class="bg-red-50 border border-red-200 rounded-xl divide-y divide-red-100">
+    {% for item in low_stock_items %}
+    <div class="flex items-center justify-between px-4 py-3 text-sm">
+      <span class="font-medium text-gray-800">{{ item.brand }} {{ item.model }}</span>
+      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-200 text-red-800">{{ item.stock }} left</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ─── Recent Sales ────────────────────────────────────── -->
+<h2 class="text-lg font-semibold mb-3">Recent Sales</h2>
+{% if recent_sales %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+  <table class="w-full text-sm text-left">
+    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+      <tr>
+        <th class="px-4 py-3">Date</th>
+        <th class="px-4 py-3">Customer</th>
+        <th class="px-4 py-3">Battery</th>
+        <th class="px-4 py-3 text-right">Price</th>
+        <th class="px-4 py-3">Payment</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for sale in recent_sales %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-3 whitespace-nowrap">{{ sale.date.strftime('%d %b %Y') }}</td>
+        <td class="px-4 py-3">{{ sale.customer_name }}</td>
+        <td class="px-4 py-3">{{ sale.battery_model }}</td>
+        <td class="px-4 py-3 text-right font-medium">₹{{ "%.2f"|format(sale.price) }}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if sale.payment_mode == 'Cash' %}bg-green-100 text-green-700
+            {% elif sale.payment_mode == 'UPI' %}bg-purple-100 text-purple-700
+            {% else %}bg-blue-100 text-blue-700{% endif %}">
+            {{ sale.payment_mode }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-gray-400 text-sm">No sales yet. <a href="/sales/add" class="text-brand-600 underline">Create your first sale →</a></p>
+{% endif %}
+{% endblock %}

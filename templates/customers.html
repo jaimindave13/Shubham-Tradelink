@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Customers — Shubham Tradelink{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Customers</h1>
+</div>
+
+<!-- ─── Search Bar ──────────────────────────────────────── -->
+<form method="GET" action="/customers" class="mb-6">
+  <div class="flex gap-2">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name, phone, or vehicle number..."
+           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+    <button type="submit"
+            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      Search
+    </button>
+    {% if query %}
+    <a href="/customers"
+       class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 transition">
+      Clear
+    </a>
+    {% endif %}
+  </div>
+</form>
+
+{% if query %}
+<p class="text-sm text-gray-500 mb-4">Showing results for "<strong>{{ query }}</strong>" — {{ customers|length }} found</p>
+{% endif %}
+
+<!-- ─── Customer List ───────────────────────────────────── -->
+{% if customers %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+  <table class="w-full text-sm text-left">
+    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+      <tr>
+        <th class="px-4 py-3">Name</th>
+        <th class="px-4 py-3">Phone</th>
+        <th class="px-4 py-3">Vehicle</th>
+        <th class="px-4 py-3">Vehicle No.</th>
+        <th class="px-4 py-3">Added On</th>
+        <th class="px-4 py-3 text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for c in customers %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-3 font-medium">{{ c.name }}</td>
+        <td class="px-4 py-3 text-gray-600">{{ c.phone }}</td>
+        <td class="px-4 py-3">{{ c.vehicle }}</td>
+        <td class="px-4 py-3 text-gray-500">{{ c.vehicle_number }}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-gray-400 text-xs">
+          {% if c.created_at %}
+            {{ c.created_at.strftime('%d %b %Y') }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-center">
+          <div class="flex items-center justify-center gap-2">
+            <a href="/customers/edit/{{ c._id }}"
+               class="text-brand-600 hover:text-brand-800 text-xs font-medium hover:underline">
+              Edit
+            </a>
+            <form method="POST" action="/customers/delete/{{ c._id }}"
+                  onsubmit="return confirm('Delete customer {{ c.name }}? This cannot be undone.')"
+                  class="inline">
+              <button type="submit"
+                      class="text-red-500 hover:text-red-700 text-xs font-medium hover:underline">
+                Delete
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% if query %}
+    <p class="text-gray-400 text-sm">No customers match your search.</p>
+  {% else %}
+    <p class="text-gray-400 text-sm">No customers yet. They'll appear here when you create a sale.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
