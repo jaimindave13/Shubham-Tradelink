@@ -6,7 +6,7 @@
 <h1 class="text-2xl font-bold mb-6">New Sale</h1>
 
 <form method="POST" action="/sales/add" id="saleForm"
-      class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5 max-w-lg">
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-5 max-w-lg mx-auto">
 
   <!-- ─── Customer Section ──────────────────────────────── -->
   <div class="border-b border-gray-100 pb-5">
@@ -72,16 +72,30 @@
       <p class="mt-1 text-xs text-gray-400">Format: DD/MM/YYYY</p>
     </div>
 
-    <!-- Battery Selection -->
+    <!-- Battery Selection (Searchable) -->
     <div class="mb-4">
-      <label for="battery_id" class="block text-sm font-medium text-gray-700 mb-1">Battery</label>
-      <select id="battery_id" name="battery_id" required
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
-        <option value="">— Select battery —</option>
-        {% for b in batteries %}
-          <option value="{{ b._id }}" data-price="{{ b.selling_price }}">{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})</option>
-        {% endfor %}
-      </select>
+      <label for="battery_search" class="block text-sm font-medium text-gray-700 mb-1">Battery</label>
+      <div class="relative" id="batteryDropdown">
+        <input type="text" id="battery_search" autocomplete="off" placeholder="Search battery..."
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition pr-8" />
+        <input type="hidden" id="battery_id" name="battery_id" required />
+        <!-- Clear button -->
+        <button type="button" id="batteryClear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
+                onclick="clearBatterySelection()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <!-- Dropdown list -->
+        <ul id="batteryList" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          {% for b in batteries %}
+          <li class="battery-option px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 transition-colors duration-100"
+              data-id="{{ b._id }}" data-price="{{ b.selling_price }}" data-old-value="{{ b.default_old_battery_value or 0 }}"
+              data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
+            <span class="font-medium">{{ b.brand }} {{ b.model }}</span>
+            <span class="text-gray-400 text-xs ml-1">(stock: {{ b.stock }})</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
 
     <!-- Serial Number with Scanner -->
@@ -98,11 +112,26 @@
       </div>
     </div>
 
-    <!-- Price -->
+    <!-- Battery Price (actual full price) -->
     <div class="mb-4">
-      <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-      <input type="number" step="0.01" id="price" name="price" required min="0" placeholder="0.00"
+      <label for="actual_price" class="block text-sm font-medium text-gray-700 mb-1">Battery Price (₹)</label>
+      <input type="number" step="0.01" id="actual_price" name="actual_price" required min="0" placeholder="0.00"
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+      <p class="mt-1 text-xs text-gray-400">Full battery price before any exchange</p>
+    </div>
+
+    <!-- Old Battery Value -->
+    <div class="mb-4">
+      <label for="old_battery_value" class="block text-sm font-medium text-gray-700 mb-1">Old Battery Value (₹) <span class="text-gray-400 font-normal">— optional</span></label>
+      <input type="number" step="0.01" id="old_battery_value" name="old_battery_value" min="0" value="0" placeholder="0.00"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+      <p class="mt-1 text-xs text-gray-400">Value of old battery exchanged by customer</p>
+    </div>
+
+    <!-- Final Amount Preview -->
+    <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+      <span class="text-green-600 font-medium">Customer Pays:</span>
+      <span id="finalAmountPreview" class="font-bold text-green-700">₹0.00</span>
     </div>
 
     <!-- Payment Mode -->
@@ -110,8 +139,7 @@
       <label for="payment_mode" class="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
       <select id="payment_mode" name="payment_mode" required
               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
-        <option value="">— Select —</option>
-        <option value="Cash">Cash</option>
+        <option value="Cash" selected>Cash</option>
         <option value="UPI">UPI</option>
         <option value="Card">Card</option>
         <option value="Credit">Credit</option>
@@ -123,8 +151,7 @@
       <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
       <select id="service" name="service" required
               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
-        <option value="">— Select —</option>
-        <option value="Installation">Installation</option>
+        <option value="Installation" selected>Installation</option>
         <option value="Charging">Charging</option>
         <option value="Exchange">Exchange</option>
       </select>
@@ -132,7 +159,7 @@
   </div>
 
   <button type="submit"
-          class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition">
+          class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
     Record Sale
   </button>
 </form>
@@ -185,14 +212,79 @@
       });
   });
 
-  // Auto-fill selling price when battery is selected
-  document.getElementById('battery_id').addEventListener('change', function () {
-    const selected = this.options[this.selectedIndex];
-    const price = selected.getAttribute('data-price');
-    if (price) {
-      document.getElementById('price').value = price;
-    }
-  });
+  // ── Searchable Battery Dropdown ─────────────────────────────
+  (function() {
+    const searchInput = document.getElementById('battery_search');
+    const hiddenInput = document.getElementById('battery_id');
+    const list = document.getElementById('batteryList');
+    const clearBtn = document.getElementById('batteryClear');
+    const options = list.querySelectorAll('.battery-option');
+
+    // Show dropdown and filter on input
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      let hasVisible = false;
+      options.forEach(opt => {
+        const match = opt.dataset.label.toLowerCase().includes(q);
+        opt.style.display = match ? '' : 'none';
+        if (match) hasVisible = true;
+      });
+      list.classList.toggle('hidden', !hasVisible);
+      // If user types, clear current selection
+      hiddenInput.value = '';
+      clearBtn.classList.add('hidden');
+    });
+
+    // Show all on focus
+    searchInput.addEventListener('focus', function() {
+      options.forEach(opt => opt.style.display = '');
+      list.classList.remove('hidden');
+    });
+
+    // Select an option
+    options.forEach(opt => {
+      opt.addEventListener('click', function() {
+        searchInput.value = this.dataset.label;
+        hiddenInput.value = this.dataset.id;
+        list.classList.add('hidden');
+        clearBtn.classList.remove('hidden');
+
+        // Auto-fill price and old battery value
+        const price = this.dataset.price;
+        const oldVal = this.dataset.oldValue;
+        if (price) document.getElementById('actual_price').value = price;
+        if (oldVal) document.getElementById('old_battery_value').value = oldVal;
+        updateFinalAmount();
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!document.getElementById('batteryDropdown').contains(e.target)) {
+        list.classList.add('hidden');
+      }
+    });
+
+    // Clear selection
+    window.clearBatterySelection = function() {
+      searchInput.value = '';
+      hiddenInput.value = '';
+      clearBtn.classList.add('hidden');
+      document.getElementById('actual_price').value = '';
+      document.getElementById('old_battery_value').value = '0';
+      updateFinalAmount();
+    };
+  })();
+
+  // Live final amount preview
+  function updateFinalAmount() {
+    const actual = parseFloat(document.getElementById('actual_price').value) || 0;
+    const oldBat = parseFloat(document.getElementById('old_battery_value').value) || 0;
+    const final_amt = actual - oldBat;
+    document.getElementById('finalAmountPreview').textContent = '₹' + final_amt.toFixed(2);
+  }
+  document.getElementById('actual_price').addEventListener('input', updateFinalAmount);
+  document.getElementById('old_battery_value').addEventListener('input', updateFinalAmount);
 
   // Auto-format date as DD/MM/YYYY while typing
   document.getElementById('sale_date').addEventListener('input', function (e) {

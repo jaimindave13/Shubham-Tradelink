@@ -2,22 +2,21 @@
 {% block title %}Sales History — Shubham Tradelink{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold">Sales History</h1>
+<div class="flex items-center justify-between mb-4 sm:mb-6">
+  <h1 class="text-xl sm:text-2xl font-bold">Sales History</h1>
   <a href="/sales/add"
-     class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition flex items-center gap-1">
+     class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-1">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
     New Sale
   </a>
 </div>
 
 <!-- ─── Filters ─────────────────────────────────────────── -->
-<form method="GET" action="/sales/history" class="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-  <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-    <!-- Search -->
-    <div>
+<form method="GET" action="/sales/history" class="mb-4 sm:mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+    <div class="col-span-2 sm:col-span-1">
       <label class="block text-xs font-medium text-gray-500 mb-1">Search</label>
-      <input type="text" name="q" value="{{ query }}" placeholder="Customer, phone, or battery..."
+      <input type="text" name="q" value="{{ query }}" placeholder="Customer, phone, battery..."
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
     </div>
     <!-- Date From -->
@@ -32,10 +31,9 @@
       <input type="text" name="to" value="{{ date_to }}" placeholder="DD/MM/YYYY" maxlength="10"
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition date-input" />
     </div>
-    <!-- Buttons -->
-    <div class="flex items-end gap-2">
+    <div class="col-span-2 sm:col-span-1 flex items-end gap-2">
       <button type="submit"
-              class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition">
+              class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
         Filter
       </button>
       {% if query or date_from or date_to %}
@@ -48,8 +46,24 @@
   </div>
 </form>
 
-<!-- ─── Summary Stats ───────────────────────────────────── -->
-<div class="grid grid-cols-2 gap-4 mb-6">
+<!-- ─── Summary Stats ─────────────────────────────── -->
+<!-- Mobile: compact horizontal row -->
+<div class="sm:hidden grid grid-cols-3 gap-2 mb-4">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 text-center">
+    <p class="text-[10px] text-gray-400 uppercase">Sales</p>
+    <p class="text-lg font-bold text-gray-900">{{ total_count }}</p>
+  </div>
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 text-center">
+    <p class="text-[10px] text-gray-400 uppercase">Revenue</p>
+    <p class="text-base font-bold text-gray-900 truncate">₹{{ "%.0f"|format(total_revenue) }}</p>
+  </div>
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 text-center">
+    <p class="text-[10px] text-gray-400 uppercase">Profit</p>
+    <p class="text-base font-bold truncate {% if total_profit >= 0 %}text-green-700{% else %}text-red-700{% endif %}">₹{{ "%.0f"|format(total_profit) }}</p>
+  </div>
+</div>
+<!-- Desktop: full stat cards -->
+<div class="hidden sm:grid sm:grid-cols-3 gap-3 mb-6">
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
     <div class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-100 text-brand-600">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
@@ -60,7 +74,7 @@
     </div>
   </div>
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
-    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/></svg>
     </div>
     <div>
@@ -68,34 +82,57 @@
       <p class="text-xl font-bold text-gray-900">₹{{ "%.2f"|format(total_revenue) }}</p>
     </div>
   </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500">Total Profit</p>
+      <p class="text-xl font-bold {% if total_profit >= 0 %}text-green-700{% else %}text-red-700{% endif %}">₹{{ "%.2f"|format(total_profit) }}</p>
+    </div>
+  </div>
 </div>
 
-<!-- ─── Sales Table ─────────────────────────────────────── -->
+<!-- ─── Sales Table (Desktop) ───────────────────────────── -->
 {% if sales %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
   <table class="w-full text-sm text-left">
     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
       <tr>
         <th class="px-4 py-3">Date</th>
         <th class="px-4 py-3">Customer</th>
         <th class="px-4 py-3">Battery</th>
-        <th class="px-4 py-3">Serial No.</th>
-        <th class="px-4 py-3 text-right">Price</th>
+        <th class="px-4 py-3 text-right">Paid</th>
+        <th class="px-4 py-3 text-right">Old Bat.</th>
+        <th class="px-4 py-3 text-right">Profit</th>
         <th class="px-4 py-3">Payment</th>
         <th class="px-4 py-3">Service</th>
+        <th class="px-4 py-3 text-center">Action</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       {% for sale in sales %}
-      <tr class="hover:bg-gray-50 transition">
+      <tr class="hover:bg-gray-50 transition-colors duration-200">
         <td class="px-4 py-3 whitespace-nowrap">{{ sale.date.strftime('%d/%m/%Y') }}</td>
         <td class="px-4 py-3">
           <div class="font-medium">{{ sale.customer_name }}</div>
           <div class="text-xs text-gray-400">{{ sale.customer_phone }}</div>
         </td>
         <td class="px-4 py-3">{{ sale.battery_model }}</td>
-        <td class="px-4 py-3 text-gray-500">{{ sale.serial_number }}</td>
-        <td class="px-4 py-3 text-right font-medium">₹{{ "%.2f"|format(sale.price) }}</td>
+        <td class="px-4 py-3 text-right font-medium">₹{{ "%.2f"|format(sale.final_amount) }}</td>
+        <td class="px-4 py-3 text-right text-gray-500">
+          {% if sale.get('old_battery_value', 0) > 0 %}
+            ₹{{ "%.2f"|format(sale.old_battery_value) }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-right">
+          {% set profit = sale.get('profit', 0) %}
+          <span class="font-medium {% if profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            ₹{{ "%.2f"|format(profit) }}
+          </span>
+        </td>
         <td class="px-4 py-3">
           <span class="px-2 py-0.5 rounded-full text-xs font-medium
             {% if sale.payment_mode == 'Cash' %}bg-green-100 text-green-700
@@ -110,10 +147,67 @@
             {{ sale.service }}
           </span>
         </td>
+        <td class="px-4 py-3 text-center whitespace-nowrap">
+          <a href="/sales/edit/{{ sale._id }}"
+             class="text-brand-600 hover:text-brand-800 text-xs font-medium transition">Edit</a>
+          <span class="text-gray-300 mx-1">|</span>
+          <a href="/sales/invoice/{{ sale._id }}"
+             class="text-gray-500 hover:text-gray-800 text-xs font-medium transition">Invoice</a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+</div>
+
+<!-- ─── Sales Cards (Mobile) ──────────────────────────── -->
+<div class="md:hidden space-y-2">
+  {% for sale in sales %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+    <div class="flex items-start justify-between mb-1.5">
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-gray-900 text-sm truncate">{{ sale.customer_name }}</p>
+        <p class="text-xs text-gray-400">{{ sale.customer_phone }}</p>
+      </div>
+      <span class="text-xs text-gray-400 whitespace-nowrap ml-2">{{ sale.date.strftime('%d/%m') }}</span>
+    </div>
+    
+    <p class="text-xs text-gray-500 mb-2">{{ sale.battery_model }}</p>
+    
+    <div class="flex items-center justify-between text-sm mb-2">
+      <div>
+        <span class="text-gray-500 text-xs">Paid:</span>
+        <span class="font-semibold text-gray-900 ml-0.5">₹{{ "%.0f"|format(sale.final_amount) }}</span>
+      </div>
+      <div>
+        {% set profit = sale.get('profit', 0) %}
+        <span class="text-gray-500 text-xs">Profit:</span>
+        <span class="font-semibold ml-0.5 {% if profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">₹{{ "%.0f"|format(profit) }}</span>
+      </div>
+    </div>
+    
+    <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div class="flex items-center gap-1.5">
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium
+          {% if sale.payment_mode == 'Cash' %}bg-green-100 text-green-700
+          {% elif sale.payment_mode == 'UPI' %}bg-purple-100 text-purple-700
+          {% elif sale.payment_mode == 'Card' %}bg-blue-100 text-blue-700
+          {% else %}bg-amber-100 text-amber-700{% endif %}">
+          {{ sale.payment_mode }}
+        </span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
+          {{ sale.service }}
+        </span>
+      </div>
+      <div class="flex gap-1.5">
+        <a href="/sales/edit/{{ sale._id }}"
+           class="text-xs font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-md px-2.5 py-1 transition-colors duration-200">Edit</a>
+        <a href="/sales/invoice/{{ sale._id }}"
+           class="text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-md px-2.5 py-1 transition-colors duration-200">Invoice</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% else %}
   {% if query or date_from or date_to %}

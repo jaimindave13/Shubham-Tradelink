@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Quick Entries — Shubham Tradelink{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4 sm:mb-6">
+  <h1 class="text-xl sm:text-2xl font-bold">Quick Entries</h1>
+</div>
+
+<!-- ─── Summary Tiles ──────────────────────────────── -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 sm:mb-6">
+  <!-- Today's Entries -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-100 text-brand-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500">Today's Income</p>
+      <p class="text-xl font-bold text-gray-900">₹{{ "%.0f"|format(today_total) }}</p>
+      <p class="text-[10px] text-gray-400">{{ today_count }} entries</p>
+    </div>
+  </div>
+  <!-- Monthly Revenue -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500">This Month</p>
+      <p class="text-xl font-bold text-blue-700">₹{{ "%.0f"|format(monthly_total) }}</p>
+      <p class="text-[10px] text-gray-400">{{ monthly_count }} entries</p>
+    </div>
+  </div>
+  <!-- Filtered Revenue (shown when date filter is active) -->
+  {% if filtered_total is not none %}
+  <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4 flex items-center gap-3 col-span-2 sm:col-span-1">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500">Filtered Total</p>
+      <p class="text-xl font-bold text-green-700">₹{{ "%.0f"|format(filtered_total) }}</p>
+      <p class="text-[10px] text-gray-400">{{ filtered_count }} entries · {{ filter_from }} → {{ filter_to }}</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ─── Date Range Filter ────────────────────────────── -->
+<form method="GET" action="/quick-entries" class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-5 flex flex-wrap items-end gap-2">
+  <div class="flex-1 min-w-[100px]">
+    <label class="block text-[10px] font-medium text-gray-500 mb-0.5">From</label>
+    <input type="text" name="from" value="{{ filter_from }}" placeholder="DD/MM/YYYY" maxlength="10"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-500 transition date-input" />
+  </div>
+  <div class="flex-1 min-w-[100px]">
+    <label class="block text-[10px] font-medium text-gray-500 mb-0.5">To</label>
+    <input type="text" name="to" value="{{ filter_to }}" placeholder="DD/MM/YYYY" maxlength="10"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-500 transition date-input" />
+  </div>
+  <button type="submit"
+          class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 transition-all duration-200">
+    Filter
+  </button>
+  {% if filter_from or filter_to %}
+  <a href="/quick-entries" class="text-sm text-gray-500 hover:text-gray-700 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">Clear</a>
+  {% endif %}
+</form>
+
+<!-- ─── Quick Entry Form ─────────────────────────────── -->
+<form method="POST" action="/quick-entries"
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6 max-w-lg mx-auto">
+  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    New Entry
+  </h2>
+
+  <div class="space-y-4">
+    <!-- Type -->
+    <div>
+      <label for="entry_type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+      <select id="entry_type" name="entry_type" required
+              class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
+        <option value="">— Select —</option>
+        <option value="Charging">⚡ Charging</option>
+        <option value="Checking">🔍 Checking</option>
+        <option value="DM Water">💧 DM Water</option>
+        <option value="Other">📋 Other</option>
+      </select>
+    </div>
+
+    <!-- Amount + Payment side by side -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+        <input type="number" step="0.01" id="amount" name="amount" required min="0" placeholder="0.00"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+      </div>
+      <div>
+        <label for="payment_mode" class="block text-sm font-medium text-gray-700 mb-1">Payment</label>
+        <select id="payment_mode" name="payment_mode" required
+                class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Date -->
+    <div>
+      <label for="entry_date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+      <input type="text" id="entry_date" name="entry_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition date-input" />
+    </div>
+
+    <!-- Notes -->
+    <div>
+      <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes <span class="text-gray-400 font-normal">— optional</span></label>
+      <input type="text" id="notes" name="notes" placeholder="e.g. 2 bottles DM water"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+    </div>
+  </div>
+
+  <button type="submit"
+          class="w-full mt-5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
+    Add Entry
+  </button>
+</form>
+
+<!-- ─── Entries List ──────────────────────────────────── -->
+{% if filtered_total is not none %}
+<h2 class="text-lg font-semibold mb-3">Entries <span class="text-sm font-normal text-gray-400">({{ filter_from }} — {{ filter_to }})</span></h2>
+{% else %}
+<h2 class="text-lg font-semibold mb-3">Recent Entries</h2>
+{% endif %}
+
+{% if entries %}
+<!-- Desktop table -->
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+  <table class="w-full text-sm text-left">
+    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+      <tr>
+        <th class="px-4 py-3">Date</th>
+        <th class="px-4 py-3">Type</th>
+        <th class="px-4 py-3 text-right">Amount</th>
+        <th class="px-4 py-3">Payment</th>
+        <th class="px-4 py-3">Notes</th>
+        <th class="px-4 py-3 text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for e in entries %}
+      <tr class="hover:bg-gray-50 transition-colors duration-200">
+        <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ e.date.strftime('%d/%m/%Y') }}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if e.type == 'Charging' %}bg-yellow-100 text-yellow-700
+            {% elif e.type == 'Checking' %}bg-blue-100 text-blue-700
+            {% elif e.type == 'DM Water' %}bg-cyan-100 text-cyan-700
+            {% else %}bg-gray-100 text-gray-700{% endif %}">
+            {{ e.type }}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-right font-medium">₹{{ "%.2f"|format(e.amount) }}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if e.payment_mode == 'Cash' %}bg-green-100 text-green-700
+            {% elif e.payment_mode == 'UPI' %}bg-purple-100 text-purple-700
+            {% else %}bg-blue-100 text-blue-700{% endif %}">
+            {{ e.payment_mode }}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-gray-500 text-xs">{{ e.notes or '—' }}</td>
+        <td class="px-4 py-3 text-center">
+          <form method="POST" action="/quick-entries/delete/{{ e._id }}"
+                onsubmit="return confirm('Delete this entry?')" class="inline">
+            <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-medium hover:underline">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile cards -->
+<div class="md:hidden space-y-2">
+  {% for e in entries %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+    <div class="flex items-center justify-between mb-1.5">
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-medium
+        {% if e.type == 'Charging' %}bg-yellow-100 text-yellow-700
+        {% elif e.type == 'Checking' %}bg-blue-100 text-blue-700
+        {% elif e.type == 'DM Water' %}bg-cyan-100 text-cyan-700
+        {% else %}bg-gray-100 text-gray-700{% endif %}">
+        {{ e.type }}
+      </span>
+      <span class="text-xs text-gray-400">{{ e.date.strftime('%d/%m') }}</span>
+    </div>
+    
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-gray-900 text-sm">₹{{ "%.0f"|format(e.amount) }}</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium
+          {% if e.payment_mode == 'Cash' %}bg-green-100 text-green-700
+          {% elif e.payment_mode == 'UPI' %}bg-purple-100 text-purple-700
+          {% else %}bg-blue-100 text-blue-700{% endif %}">
+          {{ e.payment_mode }}
+        </span>
+      </div>
+      <form method="POST" action="/quick-entries/delete/{{ e._id }}"
+            onsubmit="return confirm('Delete this entry?')" class="inline">
+        <button type="submit" class="text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-md px-2 py-1 transition-colors duration-200">Del</button>
+      </form>
+    </div>
+    
+    {% if e.notes %}
+    <p class="text-xs text-gray-400 mt-1 truncate">{{ e.notes }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-gray-400 text-sm">No entries yet. Add your first quick entry above.</p>
+{% endif %}
+
+<!-- ─── Auto-format date ─────────────────────────────── -->
+<script>
+  document.querySelectorAll('.date-input').forEach(function (input) {
+    input.addEventListener('input', function () {
+      let val = this.value.replace(/\D/g, '');
+      if (val.length > 8) val = val.substring(0, 8);
+      if (val.length >= 5) {
+        this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+      } else if (val.length >= 3) {
+        this.value = val.substring(0, 2) + '/' + val.substring(2);
+      } else {
+        this.value = val;
+      }
+    });
+  });
+</script>
+{% endblock %}

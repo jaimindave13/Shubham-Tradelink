@@ -22,7 +22,7 @@
 </div>
 
 <!-- Balance Summary -->
-<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
     <p class="text-xs text-gray-500">Total Credit</p>
     <p class="text-lg font-bold text-gray-900">₹{{ "%.2f"|format(total_credit) }}</p>
@@ -43,8 +43,8 @@
 <!-- ─── Action Forms (side by side) ─────────────────────── -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
 
-  <!-- Add Credit Sale -->
-  <form method="POST" action="/mechanics/{{ mechanic._id }}/sale"
+  <!-- Add Credit Sale (multi-battery) -->
+  <form method="POST" action="/mechanics/{{ mechanic._id }}/sale" id="creditSaleForm"
         class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -55,43 +55,88 @@
       <input type="text" name="sale_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition date-input" />
     </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Battery</label>
-      <select name="battery_id" required
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition bg-white" id="mech_battery">
-        <option value="">— Select —</option>
-        {% for b in batteries %}
-          <option value="{{ b._id }}" data-price="{{ b.selling_price }}" data-stock="{{ b.stock }}">{{ b.brand }} {{ b.model }} ({{ b.stock }})</option>
-        {% endfor %}
-      </select>
-    </div>
-    <!-- Quantity -->
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Quantity</label>
-      <input type="number" name="quantity" id="mech_qty" required min="1" value="1"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" />
-    </div>
-    <!-- Serial Number with Scanner -->
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Serial Number(s)</label>
-      <div class="flex gap-2">
-        <input type="text" name="serial_number" id="mech_serial" required placeholder="S/N (comma-separated for multiple)"
-               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" />
-        <button type="button" id="scanBtn"
-                class="bg-gray-700 hover:bg-gray-800 text-white rounded-lg px-3 py-2 transition flex items-center gap-1"
-                title="Scan barcode / QR code">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-        </button>
+
+    <!-- Dynamic battery entries container -->
+    <div id="batteryEntries">
+      <!-- First battery entry (template) -->
+      <div class="battery-entry border border-gray-200 rounded-lg p-3 space-y-3 mb-3" data-index="0">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Battery #1</span>
+          <button type="button" class="remove-entry-btn hidden text-red-400 hover:text-red-600 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-red-50 transition-colors"
+                  onclick="removeBatteryEntry(this)">✕ Remove</button>
+        </div>
+        <!-- Battery search -->
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Battery</label>
+          <div class="relative battery-dropdown">
+            <input type="text" class="battery-search w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-500 transition pr-8"
+                   autocomplete="off" placeholder="Search battery..." />
+            <input type="hidden" class="battery-id-hidden" required />
+            <button type="button" class="battery-clear hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5" onclick="clearMechBattery(this)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <ul class="battery-list hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+              {% for b in batteries %}
+              <li class="battery-opt px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 transition-colors duration-100"
+                  data-id="{{ b._id }}" data-price="{{ b.mechanic_price if b.mechanic_price else b.selling_price }}" data-stock="{{ b.stock }}"
+                  data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
+                <span class="font-medium">{{ b.brand }} {{ b.model }}</span>
+                <span class="text-gray-400 text-xs ml-1">({{ b.stock }})</span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <!-- Quantity + Unit Price side by side -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Quantity</label>
+            <input type="number" class="entry-qty w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" min="1" value="1" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Unit Price (₹)</label>
+            <input type="number" step="0.01" class="entry-price w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" min="0" value="0" placeholder="0.00" />
+          </div>
+        </div>
+        <!-- Serial Numbers -->
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Serial Number(s)</label>
+          <div class="flex gap-2">
+            <input type="text" class="entry-serial flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition"
+                   placeholder="Comma-separated (e.g. SN1, SN2)" />
+            <button type="button" class="scan-btn bg-gray-700 hover:bg-gray-800 text-white rounded-lg px-3 py-2 transition flex items-center"
+                    title="Scan barcode / QR code">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            </button>
+          </div>
+          <p class="mt-1 text-[10px] text-gray-400 serial-hint">Enter serial numbers separated by commas</p>
+        </div>
+        <!-- Per-entry subtotal -->
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5">
+          <span class="text-xs text-gray-500">Subtotal</span>
+          <span class="entry-subtotal text-sm font-semibold text-gray-700">₹0.00</span>
+        </div>
       </div>
-      <p class="mt-1 text-xs text-gray-400">Type or scan. For multiple batteries, separate with commas.</p>
     </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Total Amount (₹)</label>
-      <input type="number" step="0.01" name="amount" id="mech_amount" required min="0" placeholder="0.00"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" />
+
+    <!-- Add another battery button -->
+    <button type="button" id="addBatteryBtn"
+            class="w-full border-2 border-dashed border-gray-300 hover:border-brand-400 text-gray-500 hover:text-brand-600 text-sm font-medium rounded-lg px-4 py-2.5 transition-colors duration-200 flex items-center justify-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add Another Battery
+    </button>
+
+    <!-- Grand total -->
+    <div class="flex items-center justify-between bg-brand-50 rounded-lg px-4 py-3 border border-brand-100">
+      <span class="text-sm font-semibold text-brand-700">Grand Total</span>
+      <span id="grandTotal" class="text-lg font-bold text-brand-700">₹0.00</span>
     </div>
+
+    <!-- Hidden JSON payload -->
+    <input type="hidden" name="batteries_json" id="batteriesJson" />
+
     <button type="submit"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg px-4 py-2 text-sm transition">
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition active:scale-95">
       Add Credit ↑
     </button>
   </form>
@@ -154,7 +199,7 @@
 <h2 class="text-lg font-semibold mb-3">Transaction History</h2>
 
 {% if transactions %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
   <table class="w-full text-sm text-left">
     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
       <tr>
@@ -162,11 +207,12 @@
         <th class="px-4 py-3">Description</th>
         <th class="px-4 py-3 text-right">Credit ↑</th>
         <th class="px-4 py-3 text-right">Payment ↓</th>
+        <th class="px-4 py-3 text-center">Receipt</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       {% for t in transactions %}
-      <tr class="hover:bg-gray-50 transition">
+      <tr class="hover:bg-gray-50 transition-colors duration-200">
         <td class="px-4 py-3 whitespace-nowrap">{{ t.date.strftime('%d/%m/%Y') }}</td>
         <td class="px-4 py-3">
           {% if t.type == 'credit' %}
@@ -185,10 +231,40 @@
             <span class="font-medium text-green-600">₹{{ "%.2f"|format(t.amount) }}</span>
           {% endif %}
         </td>
+        <td class="px-4 py-3 text-center">
+          {% if t.type == 'payment' and t.payment_id %}
+            <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-brand-600 hover:underline text-xs font-medium">View</a>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+</div>
+
+<!-- Mobile transaction cards -->
+<div class="md:hidden space-y-2">
+  {% for t in transactions %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex items-center justify-between">
+    <div class="flex-1 min-w-0">
+      <p class="text-sm {% if t.type == 'credit' %}text-red-600{% else %}text-green-600{% endif %} truncate">{{ t.description }}</p>
+      <p class="text-xs text-gray-400">{{ t.date.strftime('%d/%m/%Y') }}</p>
+    </div>
+    <div class="text-right ml-3 shrink-0">
+      {% if t.type == 'credit' %}
+        <p class="text-sm font-semibold text-red-600">+₹{{ "%.2f"|format(t.amount) }}</p>
+        <p class="text-[10px] text-red-400">credit</p>
+      {% else %}
+        <p class="text-sm font-semibold text-green-600">-₹{{ "%.2f"|format(t.amount) }}</p>
+        {% if t.payment_id %}
+        <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-[10px] text-brand-600 font-medium hover:underline">Receipt →</a>
+        {% else %}
+        <p class="text-[10px] text-green-400">paid</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% else %}
 <p class="text-gray-400 text-sm">No transactions yet. Add a credit sale or record a payment above.</p>
@@ -196,7 +272,7 @@
 
 <!-- ─── Scripts ─────────────────────────────────────────── -->
 <script>
-  // Auto-format DD/MM/YYYY date inputs
+  // ─── Date auto-format ──────────────────────────────────────
   document.querySelectorAll('.date-input').forEach(function (input) {
     input.addEventListener('input', function () {
       let val = this.value.replace(/\D/g, '');
@@ -211,55 +287,243 @@
     });
   });
 
-  // ─── Battery + Quantity → auto-calculate amount ──────────
-  const batterySelect = document.getElementById('mech_battery');
-  const qtyInput = document.getElementById('mech_qty');
-  const amountInput = document.getElementById('mech_amount');
-  let unitPrice = 0;
+  // ─── Battery data (from server) ────────────────────────────
+  const batteryData = [
+    {% for b in batteries %}
+    { id: "{{ b._id }}", label: "{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})", price: {{ b.mechanic_price if b.mechanic_price else b.selling_price }}, stock: {{ b.stock }}, brand: "{{ b.brand }}", model: "{{ b.model }}" },
+    {% endfor %}
+  ];
 
-  function updateAmount() {
-    const qty = parseInt(qtyInput.value) || 1;
-    if (unitPrice > 0) {
-      amountInput.value = (unitPrice * qty).toFixed(2);
-    }
+  // ─── Searchable dropdown logic for a single entry ──────────
+  function initBatterySearch(entry) {
+    const searchInput = entry.querySelector('.battery-search');
+    const hiddenInput = entry.querySelector('.battery-id-hidden');
+    const clearBtn = entry.querySelector('.battery-clear');
+    const list = entry.querySelector('.battery-list');
+    const opts = list.querySelectorAll('.battery-opt');
+
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      let visible = false;
+      opts.forEach(opt => {
+        const match = opt.dataset.label.toLowerCase().includes(q);
+        opt.style.display = match ? '' : 'none';
+        if (match) visible = true;
+      });
+      list.classList.toggle('hidden', !visible);
+      hiddenInput.value = '';
+      hiddenInput.dataset.price = '0';
+      clearBtn.classList.add('hidden');
+      updateEntrySubtotal(entry);
+    });
+
+    searchInput.addEventListener('focus', function() {
+      opts.forEach(opt => opt.style.display = '');
+      list.classList.remove('hidden');
+    });
+
+    opts.forEach(opt => {
+      opt.addEventListener('click', function() {
+        searchInput.value = this.dataset.label;
+        hiddenInput.value = this.dataset.id;
+        hiddenInput.dataset.price = this.dataset.price;
+        list.classList.add('hidden');
+        clearBtn.classList.remove('hidden');
+        // Auto-fill the editable price field
+        entry.querySelector('.entry-price').value = this.dataset.price;
+        updateEntrySubtotal(entry);
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+      if (!entry.querySelector('.battery-dropdown').contains(e.target)) {
+        list.classList.add('hidden');
+      }
+    });
+
+    // Quantity change
+    entry.querySelector('.entry-qty').addEventListener('input', function() {
+      updateEntrySubtotal(entry);
+    });
+
+    // Price change (manual override)
+    entry.querySelector('.entry-price').addEventListener('input', function() {
+      updateEntrySubtotal(entry);
+    });
   }
 
-  batterySelect.addEventListener('change', function () {
-    const price = this.options[this.selectedIndex].getAttribute('data-price');
-    if (price) {
-      unitPrice = parseFloat(price);
-      updateAmount();
-    }
+  function updateEntrySubtotal(entry) {
+    const qty = parseInt(entry.querySelector('.entry-qty').value) || 1;
+    const price = parseFloat(entry.querySelector('.entry-price').value) || 0;
+    const subtotal = price * qty;
+    entry.querySelector('.entry-subtotal').textContent = '₹' + subtotal.toFixed(2);
+    updateGrandTotal();
+  }
+
+  function updateGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('.battery-entry').forEach(entry => {
+      const qty = parseInt(entry.querySelector('.entry-qty').value) || 1;
+      const price = parseFloat(entry.querySelector('.entry-price').value) || 0;
+      total += price * qty;
+    });
+    document.getElementById('grandTotal').textContent = '₹' + total.toFixed(2);
+  }
+
+  // Clear battery selection
+  window.clearMechBattery = function(btn) {
+    const entry = btn.closest('.battery-entry');
+    entry.querySelector('.battery-search').value = '';
+    entry.querySelector('.battery-id-hidden').value = '';
+    entry.querySelector('.battery-id-hidden').dataset.price = '0';
+    entry.querySelector('.entry-price').value = '0';
+    btn.classList.add('hidden');
+    updateEntrySubtotal(entry);
+  };
+
+  // ─── Add / Remove battery entries ──────────────────────────
+  let entryCount = 1;
+
+  document.getElementById('addBatteryBtn').addEventListener('click', function() {
+    const container = document.getElementById('batteryEntries');
+    const firstEntry = container.querySelector('.battery-entry');
+    const clone = firstEntry.cloneNode(true);
+
+    entryCount++;
+    clone.dataset.index = entryCount - 1;
+
+    // Update label
+    clone.querySelector('.text-xs.font-semibold').textContent = 'Battery #' + entryCount;
+
+    // Clear values
+    clone.querySelector('.battery-search').value = '';
+    clone.querySelector('.battery-id-hidden').value = '';
+    clone.querySelector('.battery-id-hidden').dataset.price = '0';
+    clone.querySelector('.battery-clear').classList.add('hidden');
+    clone.querySelector('.entry-qty').value = '1';
+    clone.querySelector('.entry-price').value = '0';
+    clone.querySelector('.entry-serial').value = '';
+    clone.querySelector('.entry-subtotal').textContent = '₹0.00';
+
+    // Show remove button
+    clone.querySelector('.remove-entry-btn').classList.remove('hidden');
+
+    // Show remove on first entry too (if now > 1)
+    updateRemoveButtons();
+
+    container.appendChild(clone);
+
+    // Re-init searchable dropdown for clone
+    initBatterySearch(clone);
   });
 
-  qtyInput.addEventListener('input', updateAmount);
+  window.removeBatteryEntry = function(btn) {
+    const entry = btn.closest('.battery-entry');
+    entry.remove();
+    entryCount--;
+    // Re-number entries
+    document.querySelectorAll('.battery-entry').forEach((e, i) => {
+      e.dataset.index = i;
+      e.querySelector('.text-xs.font-semibold').textContent = 'Battery #' + (i + 1);
+    });
+    updateRemoveButtons();
+    updateGrandTotal();
+  };
 
-  // ─── Barcode / QR Scanner ───────────────────────────────
+  function updateRemoveButtons() {
+    const entries = document.querySelectorAll('.battery-entry');
+    entries.forEach(e => {
+      const btn = e.querySelector('.remove-entry-btn');
+      if (entries.length > 1) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    });
+  }
+
+  // ─── Form submit — validate + build JSON payload ───────────
+  document.getElementById('creditSaleForm').addEventListener('submit', function(e) {
+    const entries = document.querySelectorAll('.battery-entry');
+    const batteries = [];
+    let hasError = false;
+
+    entries.forEach((entry, i) => {
+      const batteryId = entry.querySelector('.battery-id-hidden').value;
+      const qty = parseInt(entry.querySelector('.entry-qty').value) || 0;
+      const serialStr = entry.querySelector('.entry-serial').value.trim();
+      const serials = serialStr ? serialStr.split(',').map(s => s.trim()).filter(s => s) : [];
+
+      if (!batteryId) {
+        alert('Battery #' + (i+1) + ': Please select a battery.');
+        hasError = true;
+        return;
+      }
+      if (qty < 1) {
+        alert('Battery #' + (i+1) + ': Quantity must be at least 1.');
+        hasError = true;
+        return;
+      }
+      if (serials.length === 0) {
+        alert('Battery #' + (i+1) + ': Please enter at least one serial number.');
+        hasError = true;
+        return;
+      }
+      if (serials.length !== qty) {
+        alert('Battery #' + (i+1) + ': You entered ' + serials.length + ' serial(s) but quantity is ' + qty + '. They must match.');
+        hasError = true;
+        return;
+      }
+
+      batteries.push({
+        battery_id: batteryId,
+        quantity: qty,
+        serials: serials,
+        custom_price: parseFloat(entry.querySelector('.entry-price').value) || 0,
+      });
+    });
+
+    if (hasError) { e.preventDefault(); return; }
+    if (batteries.length === 0) { e.preventDefault(); alert('Add at least one battery.'); return; }
+
+    document.getElementById('batteriesJson').value = JSON.stringify(batteries);
+  });
+
+  // ─── Init first entry ──────────────────────────────────────
+  initBatterySearch(document.querySelector('.battery-entry'));
+
+  // ─── Barcode / QR Scanner ──────────────────────────────────
   let html5QrCode = null;
+  let activeScanEntry = null;
 
-  document.getElementById('scanBtn').addEventListener('click', function () {
-    document.getElementById('scannerModal').classList.remove('hidden');
-    startScanner();
+  // Delegate scan button clicks (works for dynamically added entries too)
+  document.addEventListener('click', function(e) {
+    const scanBtn = e.target.closest('.scan-btn');
+    if (scanBtn) {
+      activeScanEntry = scanBtn.closest('.battery-entry');
+      document.getElementById('scannerModal').classList.remove('hidden');
+      startScanner();
+    }
   });
 
   function startScanner() {
     html5QrCode = new Html5Qrcode("qr-reader");
     html5QrCode.start(
-      { facingMode: "environment" },  // rear camera
+      { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 150 } },
       function onScanSuccess(decodedText) {
-        // Append scanned value (comma-separated if already has text)
-        const serialInput = document.getElementById('mech_serial');
-        if (serialInput.value.trim()) {
-          serialInput.value += ', ' + decodedText;
-        } else {
-          serialInput.value = decodedText;
+        if (activeScanEntry) {
+          const serialInput = activeScanEntry.querySelector('.entry-serial');
+          if (serialInput.value.trim()) {
+            serialInput.value += ', ' + decodedText;
+          } else {
+            serialInput.value = decodedText;
+          }
         }
         closeScanner();
       },
-      function onScanFailure(error) {
-        // Ignore scan failures (camera still searching)
-      }
+      function onScanFailure(error) {}
     ).catch(function (err) {
       alert("Camera access denied. Please allow camera permission and try again.");
       closeScanner();
@@ -272,6 +536,7 @@
       html5QrCode.stop().catch(() => {});
       html5QrCode = null;
     }
+    activeScanEntry = null;
   }
 </script>
 {% endblock %}

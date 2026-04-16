@@ -26,6 +26,8 @@ def add_battery():
         stock = request.form.get("stock", "").strip()
         purchase_price = request.form.get("purchase_price", "").strip()
         selling_price = request.form.get("selling_price", "").strip()
+        mechanic_price = request.form.get("mechanic_price", "0").strip()
+        default_old_battery_value = request.form.get("default_old_battery_value", "0").strip()
         warranty_months = request.form.get("warranty_months", "12").strip()
 
         # ── Validation ───────────────────────────────────────────
@@ -37,6 +39,8 @@ def add_battery():
             stock = int(stock)
             purchase_price = float(purchase_price)
             selling_price = float(selling_price)
+            mechanic_price = float(mechanic_price)
+            default_old_battery_value = float(default_old_battery_value)
             warranty_months = int(warranty_months)
         except ValueError:
             flash("Stock and warranty must be whole numbers; prices must be numbers.", "error")
@@ -50,6 +54,8 @@ def add_battery():
                 "stock": stock,
                 "purchase_price": purchase_price,
                 "selling_price": selling_price,
+                "mechanic_price": mechanic_price,
+                "default_old_battery_value": default_old_battery_value,
                 "warranty_months": warranty_months,
             }
         )
@@ -75,6 +81,8 @@ def edit_battery(battery_id):
         stock = request.form.get("stock", "").strip()
         purchase_price = request.form.get("purchase_price", "").strip()
         selling_price = request.form.get("selling_price", "").strip()
+        mechanic_price = request.form.get("mechanic_price", "0").strip()
+        default_old_battery_value = request.form.get("default_old_battery_value", "0").strip()
         warranty_months = request.form.get("warranty_months", "12").strip()
 
         if not all([brand, model, stock, purchase_price, selling_price]):
@@ -85,6 +93,8 @@ def edit_battery(battery_id):
             stock = int(stock)
             purchase_price = float(purchase_price)
             selling_price = float(selling_price)
+            mechanic_price = float(mechanic_price)
+            default_old_battery_value = float(default_old_battery_value)
             warranty_months = int(warranty_months)
         except ValueError:
             flash("Stock and warranty must be whole numbers; prices must be numbers.", "error")
@@ -99,6 +109,8 @@ def edit_battery(battery_id):
                     "stock": stock,
                     "purchase_price": purchase_price,
                     "selling_price": selling_price,
+                    "mechanic_price": mechanic_price,
+                    "default_old_battery_value": default_old_battery_value,
                     "warranty_months": warranty_months,
                 }
             },

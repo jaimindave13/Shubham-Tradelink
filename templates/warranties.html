@@ -8,11 +8,11 @@
 <form method="GET" action="/warranties" class="mb-6">
   <div class="flex gap-2">
     <input type="text" name="q" value="{{ query }}" placeholder="Search by phone, name, or vehicle number..."
-           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+           class="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
     <button type="submit"
-            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition flex items-center gap-1">
+            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-1">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      Search
+      <span class="hidden sm:inline">Search</span>
     </button>
     {% if query %}
     <a href="/warranties" class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 transition">Clear</a>
@@ -24,9 +24,9 @@
 <p class="text-sm text-gray-500 mb-4">Showing warranties for "<strong>{{ query }}</strong>" — {{ warranties|length }} found</p>
 {% endif %}
 
-<!-- ─── Warranties Table ────────────────────────────────── -->
+<!-- ─── Warranties Table (Desktop) ──────────────────────── -->
 {% if warranties %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
   <table class="w-full text-sm text-left">
     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
       <tr>
@@ -40,7 +40,7 @@
     </thead>
     <tbody class="divide-y divide-gray-100">
       {% for w in warranties %}
-      <tr class="hover:bg-gray-50 transition">
+      <tr class="hover:bg-gray-50 transition-colors duration-200">
         <td class="px-4 py-3">
           <div class="font-medium">{{ w.customer_name }}</div>
           <div class="text-xs text-gray-400">{{ w.customer_phone }}{% if w.vehicle_number %} · {{ w.vehicle_number }}{% endif %}</div>
@@ -60,6 +60,39 @@
       {% endfor %}
     </tbody>
   </table>
+</div>
+
+<!-- ─── Warranties Cards (Mobile) ─────────────────────────── -->
+<div class="md:hidden space-y-3">
+  {% for w in warranties %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <div class="flex items-start justify-between mb-2">
+      <div>
+        <p class="font-semibold text-gray-900 text-sm">{{ w.customer_name }}</p>
+        <p class="text-xs text-gray-400">{{ w.customer_phone }}{% if w.vehicle_number %} · {{ w.vehicle_number }}{% endif %}</p>
+      </div>
+      {% if w.expiring_soon %}
+        <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 animate-pulse">Expiring</span>
+      {% else %}
+        <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+      {% endif %}
+    </div>
+    
+    <p class="text-sm text-gray-600 mb-1">{{ w.battery_model }}</p>
+    <p class="text-xs text-gray-400 mb-3">S/N: {{ w.serial_number }}</p>
+    
+    <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+      <div>
+        <span class="text-gray-400">From:</span>
+        <span class="font-medium text-gray-700 ml-1">{{ w.purchase_date.strftime('%d/%m/%Y') }}</span>
+      </div>
+      <div>
+        <span class="text-gray-400">To:</span>
+        <span class="font-medium text-gray-700 ml-1">{{ w.expiry_date.strftime('%d/%m/%Y') }}</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% else %}
   {% if query %}

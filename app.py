@@ -18,6 +18,7 @@ from routes.inventory import inventory_bp
 from routes.sales import sales_bp
 from routes.warranties import warranties_bp
 from routes.mechanics import mechanics_bp
+from routes.quick_entries import quick_entry_bp
 
 
 def create_app():
@@ -44,6 +45,7 @@ def create_app():
     app.register_blueprint(sales_bp)
     app.register_blueprint(warranties_bp)
     app.register_blueprint(mechanics_bp)
+    app.register_blueprint(quick_entry_bp)
 
     # ── Login protection ─────────────────────────────────────
     @app.before_request
@@ -61,4 +63,4 @@ app = create_app()
 
 # ── Start the development server (local only) ────────────────
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0")

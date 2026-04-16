@@ -27,7 +27,19 @@ def index():
         db.sales.find({"date": {"$gte": today_start, "$lt": today_end}})
     )
     total_sales_today = len(today_sales)
-    total_revenue_today = sum(sale.get("price", 0) for sale in today_sales)
+
+    # Backward-compatible revenue & profit
+    total_revenue_today = 0
+    total_profit_today = 0
+    for sale in today_sales:
+        old_bat = sale.get("old_battery_value", 0) or 0
+        if "actual_price" in sale:
+            actual = sale["actual_price"]
+        else:
+            actual = sale.get("price", 0) + old_bat
+        final = actual - old_bat
+        total_revenue_today += final
+        total_profit_today += sale.get("profit", actual - sale.get("purchase_price", 0))
 
     # ── Low stock items (stock < 3) ──────────────────────────────
     low_stock_items = list(db.inventory.find({"stock": {"$lt": 3}}))
@@ -36,7 +48,6 @@ def index():
     recent_sales_cursor = db.sales.find().sort("date", -1).limit(10)
     recent_sales = []
     for sale in recent_sales_cursor:
-        # Attach customer name for display
         customer = db.customers.find_one({"_id": sale.get("customer_id")})
         sale["customer_name"] = customer["name"] if customer else "Unknown"
         recent_sales.append(sale)
@@ -50,6 +61,7 @@ def index():
         "dashboard.html",
         total_sales_today=total_sales_today,
         total_revenue_today=total_revenue_today,
+        total_profit_today=total_profit_today,
         low_stock_items=low_stock_items,
         recent_sales=recent_sales,
         mechanic_outstanding=mechanic_outstanding,

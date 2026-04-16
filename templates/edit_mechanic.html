@@ -5,7 +5,7 @@
 <h1 class="text-2xl font-bold mb-6">Edit Mechanic</h1>
 
 <form method="POST" action="/mechanics/edit/{{ mechanic._id }}"
-      class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5 max-w-lg">
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-5 max-w-lg mx-auto">
   <div>
     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
     <input type="text" id="name" name="name" required value="{{ mechanic.name }}"
@@ -23,7 +23,7 @@
   </div>
   <div class="flex gap-3">
     <button type="submit"
-            class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition">
+            class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
       Update
     </button>
     <a href="/mechanics"
