@@ -60,7 +60,7 @@
 </form>
 
 <!-- ─── Summary Tiles ────────────────────────────────────── -->
-<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 {% if total_outstanding > 0 %}md:grid-cols-3{% endif %} gap-4 mb-6">
   <!-- Total Outstanding -->
   {% if total_outstanding > 0 %}
   <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
@@ -87,6 +87,22 @@
         {% else %}This Month Revenue{% endif %}
       </p>
       <p class="text-xl font-bold text-green-800">₹{{ "%.2f"|format(total_filtered_revenue) }}</p>
+    </div>
+  </div>
+
+  <!-- Period Profit -->
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    </div>
+    <div>
+      <p class="text-xs text-emerald-600 font-medium">
+        {% if date_filter == 'all' %}Total Profit
+        {% elif date_filter == 'last_7' %}Last 7 Days Profit
+        {% elif date_filter == 'custom' %}Filtered Profit
+        {% else %}This Month Profit{% endif %}
+      </p>
+      <p class="text-xl font-bold text-emerald-800">₹{{ "%.2f"|format(total_filtered_profit) }}</p>
     </div>
   </div>
 </div>

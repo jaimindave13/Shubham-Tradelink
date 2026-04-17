@@ -41,8 +41,8 @@ def index():
         total_revenue_today += final
         total_profit_today += sale.get("profit", actual - sale.get("purchase_price", 0))
 
-    # ── Low stock items (stock < 3) ──────────────────────────────
-    low_stock_items = list(db.inventory.find({"stock": {"$lt": 3}}))
+    # ── Low stock items (stock ≤ 1) ──────────────────────────────
+    low_stock_items = list(db.inventory.find({"stock": {"$lte": 1}}))
 
     # ── Recent 10 sales (most-recent first) ──────────────────────
     recent_sales_cursor = db.sales.find().sort("date", -1).limit(10)

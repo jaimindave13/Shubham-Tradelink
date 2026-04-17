@@ -47,11 +47,20 @@ def create_app():
     app.register_blueprint(mechanics_bp)
     app.register_blueprint(quick_entry_bp)
 
+    # ── PWA: serve service worker from root for full scope ──────
+    @app.route("/service-worker.js")
+    def service_worker():
+        from flask import send_from_directory
+        return send_from_directory(
+            app.static_folder, "service-worker.js",
+            mimetype="application/javascript",
+        )
+
     # ── Login protection ─────────────────────────────────────
     @app.before_request
     def require_login():
         """Redirect to login page if user is not authenticated."""
-        allowed_routes = ("auth.login", "static")
+        allowed_routes = ("auth.login", "static", "service_worker")
         if not session.get("logged_in") and flask_request.endpoint not in allowed_routes:
             return redirect(url_for("auth.login"))
 

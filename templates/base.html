@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Shubham Tradelink{% endblock %}</title>
 
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.json" />
+  <meta name="theme-color" content="#1a5ef5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tradelink" />
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -106,11 +114,13 @@
     /* Colored badges (keep their colors but slightly darken bg in dark) */
     .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; }
     .dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; }
+    .dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; }
     .dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.1) !important; }
     .dark .bg-brand-50 { background-color: rgba(51, 128, 255, 0.1) !important; }
 
     .dark .border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
     .dark .border-green-200 { border-color: rgba(34, 197, 94, 0.3) !important; }
+    .dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.3) !important; }
     .dark .border-amber-200 { border-color: rgba(245, 158, 11, 0.3) !important; }
     .dark .border-brand-100 { border-color: rgba(51, 128, 255, 0.3) !important; }
 
@@ -486,6 +496,17 @@
     })();
   </script>
   {% endif %}
+
+  <!-- ─── PWA Service Worker Registration ──────────────────── -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(function(reg) { console.log('[PWA] SW registered, scope:', reg.scope); })
+          .catch(function(err) { console.log('[PWA] SW registration failed:', err); });
+      });
+    }
+  </script>
 
 </body>
 </html>

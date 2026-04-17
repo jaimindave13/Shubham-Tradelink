@@ -7,6 +7,7 @@ Mechanics buy on credit and pay later. This module tracks:
   - Outstanding balance per mechanic
 """
 
+import re
 from datetime import datetime, timedelta, date
 from bson import ObjectId
 from flask import Blueprint, render_template, request, redirect, url_for, flash
@@ -87,6 +88,7 @@ def list_mechanics():
     # Calculate outstanding balance (unfiltered) + period revenue (filtered)
     mechanics = []
     total_filtered_revenue = 0
+    total_filtered_profit = 0
 
     for m in all_mechanics:
         # Unfiltered dues (always show true balance)
@@ -107,10 +109,46 @@ def list_mechanics():
         period_revenue = sum(s.get("amount", 0) for s in period_sales)
         m["period_revenue"] = period_revenue
 
+        # Filtered profit: selling_price - cost_price (from inventory)
+        period_profit = 0
+        for s in period_sales:
+            qty = s.get("quantity", 1)
+            cost_price = 0
+
+            # Try stored purchase_price first (new records)
+            if s.get("purchase_price"):
+                cost_price = s["purchase_price"]
+            # Fallback: look up from inventory by battery_id
+            elif s.get("battery_id"):
+                inv_item = db.inventory.find_one({"_id": s["battery_id"]})
+                if inv_item:
+                    cost_price = inv_item.get("purchase_price", 0)
+            # Last resort: try matching inventory by model name
+            else:
+                model_name = s.get("battery_model", "")
+                # Strip quantity prefix like "2x " if present
+                clean_name = re.sub(r"^\d+x\s+", "", model_name)
+                if clean_name:
+                    parts = clean_name.split(" ", 1)
+                    if len(parts) == 2:
+                        inv_item = db.inventory.find_one({
+                            "brand": parts[0],
+                            "model": parts[1],
+                        })
+                        if inv_item:
+                            cost_price = inv_item.get("purchase_price", 0)
+
+            # Only count profit if we have a valid cost
+            if cost_price > 0:
+                period_profit += s.get("amount", 0) - (cost_price * qty)
+            # else: skip — don't count as profit to avoid inflating numbers
+        m["period_profit"] = period_profit
+
         # Only include mechanics with activity in the period (or if searching/viewing all)
         if period_revenue > 0 or query or date_filter == "all":
             mechanics.append(m)
             total_filtered_revenue += period_revenue
+            total_filtered_profit += period_profit
 
     # Grand total outstanding (from displayed mechanics)
     total_outstanding = sum(m["balance"] for m in mechanics)
@@ -126,6 +164,7 @@ def list_mechanics():
         date_from=date_from_str,
         date_to=date_to_str,
         total_filtered_revenue=total_filtered_revenue,
+        total_filtered_profit=total_filtered_profit,
     )
 
 
@@ -281,13 +320,15 @@ def add_mechanic_sale(mechanic_id):
         amount = unit_price * quantity
         serial_str = ", ".join(serials)
 
-        # Insert credit sale record
+        # Insert credit sale record (store purchase_price for profit tracking)
         db.mechanic_sales.insert_one({
             "mechanic_id": ObjectId(mechanic_id),
+            "battery_id": ObjectId(battery_id),
             "battery_model": description,
             "serial_number": serial_str,
             "quantity": quantity,
             "amount": amount,
+            "purchase_price": battery.get("purchase_price", 0),
             "date": sale_date,
             "created_at": datetime.utcnow(),
         })
