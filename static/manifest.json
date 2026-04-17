@@ -1,6 +1,6 @@
 {
   "name": "Shubham Tradelink",
-  "short_name": "Tradelink",
+  "short_name": "ST",
   "description": "Battery shop management system — sales, inventory, mechanics & more.",
   "start_url": "/",
   "display": "standalone",
