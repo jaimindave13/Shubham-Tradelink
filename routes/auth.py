@@ -12,8 +12,13 @@ auth_bp = Blueprint("auth", __name__)
 # ─── Credentials from environment variables ──────────────────
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH", "")
-# Plain-text fallback (for simpler setup, less secure)
-ADMIN_PASSWORD_PLAIN = os.getenv("ADMIN_PASSWORD", "")
+
+# If no hash is set but a plain password is provided, hash it at startup
+# (so plain-text is never used for comparison at runtime)
+if not ADMIN_PASSWORD_HASH:
+    _plain = os.getenv("ADMIN_PASSWORD", "")
+    if _plain:
+        ADMIN_PASSWORD_HASH = generate_password_hash(_plain)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -30,14 +35,8 @@ def login():
             flash("Invalid username or password.", "error")
             return redirect(url_for("auth.login"))
 
-        # Check hashed password first, fall back to plain-text
-        authenticated = False
-        if ADMIN_PASSWORD_HASH:
-            authenticated = check_password_hash(ADMIN_PASSWORD_HASH, password)
-        elif ADMIN_PASSWORD_PLAIN:
-            authenticated = (password == ADMIN_PASSWORD_PLAIN)
-
-        if authenticated:
+        # Authenticate using hashed password only
+        if ADMIN_PASSWORD_HASH and check_password_hash(ADMIN_PASSWORD_HASH, password):
             session["logged_in"] = True
             session["username"] = username
             flash("Welcome back!", "success")

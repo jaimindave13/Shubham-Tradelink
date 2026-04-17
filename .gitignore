@@ -37,3 +37,6 @@ dist/
 
 # Uploads (if used)
 uploads/
+
+# Scratch scripts
+scratch/
