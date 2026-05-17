@@ -2,70 +2,112 @@
 {% block title %}Edit Battery — Shubham Tradelink{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">Edit Battery</h1>
-
-<form method="POST" action="/inventory/edit/{{ battery._id }}"
-      class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-5 max-w-lg mx-auto">
-
+<div class="flex items-center justify-between gap-3 mb-4">
   <div>
-    <label for="brand" class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-    <input type="text" id="brand" name="brand" required value="{{ battery.brand }}"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+    <h1 class="text-xl font-bold text-ink-900">Edit Battery</h1>
+    <p class="text-[12px] text-ink-500">{{ battery.brand }} {{ battery.model }}</p>
   </div>
+  <a href="/inventory" class="text-[12px] font-medium text-ink-500 hover:text-ink-800 transition">← Inventory</a>
+</div>
 
-  <div>
-    <label for="model" class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-    <input type="text" id="model" name="model" required value="{{ battery.model }}"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-  </div>
-
-  <div>
-    <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-    <input type="number" id="stock" name="stock" required min="0" value="{{ battery.stock }}"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-  </div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-1">Purchase Price (₹)</label>
-      <input type="number" step="0.01" id="purchase_price" name="purchase_price" required min="0" value="{{ battery.purchase_price }}"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+<form method="POST" action="/inventory/edit/{{ battery._id }}" class="max-w-lg mx-auto">
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card">
+    <div class="px-4 py-2.5 border-b border-ink-100">
+      <h2 class="text-[12px] font-bold text-ink-500 uppercase tracking-wider">Battery Details</h2>
     </div>
-    <div>
-      <label for="selling_price" class="block text-sm font-medium text-gray-700 mb-1">Selling Price (₹)</label>
-      <input type="number" step="0.01" id="selling_price" name="selling_price" required min="0" value="{{ battery.selling_price }}"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
+    <div class="p-4 space-y-3">
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="brand" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Brand</label>
+          <input type="text" id="brand" name="brand" required value="{{ battery.brand }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+        </div>
+        <div>
+          <label for="model" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Model</label>
+          <input type="text" id="model" name="model" required value="{{ battery.model }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+        </div>
+      </div>
+
+      <div>
+        <label for="stock" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Stock Quantity</label>
+        <input type="number" id="stock" name="stock" required min="0" value="{{ battery.stock }}"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="purchase_price" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Purchase Price (₹)</label>
+          <input type="number" step="0.01" id="purchase_price" name="purchase_price" required min="0" value="{{ battery.purchase_price }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+        </div>
+        <div>
+          <label for="selling_price" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Selling Price (₹)</label>
+          <input type="number" step="0.01" id="selling_price" name="selling_price" required min="0" value="{{ battery.selling_price }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+        </div>
+      </div>
+
+      <!-- Live margin preview -->
+      <div id="marginPreview" class="flex items-center justify-between bg-ink-50 border border-ink-100 rounded-md px-3 py-2">
+        <span class="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Margin</span>
+        <span id="marginVal" class="text-[13px] font-bold tabular"></span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="mechanic_price" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Mechanic Price (₹)</label>
+          <input type="number" step="0.01" id="mechanic_price" name="mechanic_price" min="0" value="{{ battery.mechanic_price or '0' }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          <p class="mt-1 text-[10px] text-ink-500">0 = use selling price</p>
+        </div>
+        <div>
+          <label for="default_old_battery_value" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Exchange Value (₹)</label>
+          <input type="number" step="0.01" id="default_old_battery_value" name="default_old_battery_value" min="0" value="{{ battery.default_old_battery_value or '0' }}"
+                 class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          <p class="mt-1 text-[10px] text-ink-500">Auto-filled on sale</p>
+        </div>
+      </div>
+
+      <div>
+        <label for="warranty_months" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Warranty Period (months)</label>
+        <input type="number" id="warranty_months" name="warranty_months" required min="0" value="{{ battery.warranty_months or 12 }}"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+      </div>
+
     </div>
   </div>
 
-  <div>
-    <label for="mechanic_price" class="block text-sm font-medium text-gray-700 mb-1">Mechanic Price (₹)</label>
-    <input type="number" step="0.01" id="mechanic_price" name="mechanic_price" min="0" value="{{ battery.mechanic_price or '0' }}" placeholder="0.00"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-    <p class="mt-1 text-xs text-gray-400">Price for mechanic credit sales. Leave 0 to use retail selling price.</p>
-  </div>
-  <div>
-    <label for="default_old_battery_value" class="block text-sm font-medium text-gray-700 mb-1">Old Battery Exchange Value (Default ₹)</label>
-    <input type="number" step="0.01" id="default_old_battery_value" name="default_old_battery_value" min="0" value="{{ battery.default_old_battery_value or '0' }}" placeholder="0.00"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-    <p class="mt-1 text-xs text-gray-400">This amount will be auto-filled when recording a sale for this battery.</p>
-  </div>
-
-  <div>
-    <label for="warranty_months" class="block text-sm font-medium text-gray-700 mb-1">Warranty Period (months)</label>
-    <input type="number" id="warranty_months" name="warranty_months" required min="0" value="{{ battery.warranty_months or 12 }}"
-           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-  </div>
-
-  <div class="flex gap-3">
+  <div class="flex gap-3 mt-4">
     <button type="submit"
-            class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
+            class="flex-1 bg-accent-500 hover:bg-accent-600 text-ink-900 font-bold rounded-md px-4 py-2.5 text-sm active:scale-[0.99] transition shadow-sm">
       Update Battery
     </button>
     <a href="/inventory"
-       class="flex-1 text-center border border-gray-300 text-gray-700 font-medium rounded-lg px-4 py-2.5 text-sm hover:bg-gray-50 transition">
+       class="flex-1 text-center border border-ink-300 text-ink-700 font-medium rounded-md px-4 py-2.5 text-sm hover:bg-ink-50 transition">
       Cancel
     </a>
   </div>
 </form>
+
+<script>
+  function updateMargin() {
+    const buy = parseFloat(document.getElementById('purchase_price').value) || 0;
+    const sell = parseFloat(document.getElementById('selling_price').value) || 0;
+    const preview = document.getElementById('marginPreview');
+    const val = document.getElementById('marginVal');
+    if (buy > 0 && sell > 0) {
+      const m = (sell - buy) / sell * 100;
+      val.textContent = '₹' + (sell - buy).toLocaleString('en-IN') + ' · ' + m.toFixed(1) + '%';
+      val.className = 'text-[13px] font-bold tabular ' + (m >= 20 ? 'text-emerald-700' : m >= 10 ? 'text-accent-700' : 'text-rose-600');
+    } else {
+      val.textContent = '—';
+      val.className = 'text-[13px] font-bold tabular text-ink-500';
+    }
+  }
+  document.getElementById('purchase_price').addEventListener('input', updateMargin);
+  document.getElementById('selling_price').addEventListener('input', updateMargin);
+  updateMargin();
+</script>
 {% endblock %}

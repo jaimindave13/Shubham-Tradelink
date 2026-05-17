@@ -33,7 +33,7 @@ def create_app():
     # ── Security settings ────────────────────────────────────
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = not app.debug  # HTTPS only in production
+    app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_DEBUG", "1") != "1"  # HTTPS only in production
     app.config["PERMANENT_SESSION_LIFETIME"] = 86400      # 24-hour session timeout
 
     # ── Initialise database connection ───────────────────────

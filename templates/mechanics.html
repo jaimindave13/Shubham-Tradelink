@@ -2,251 +2,201 @@
 {% block title %}Mechanics — Shubham Tradelink{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold">Mechanics</h1>
+<div class="flex items-center justify-between gap-3 mb-4">
+  <div>
+    <h1 class="text-xl font-bold text-ink-900">Mechanics</h1>
+    <p class="text-[12px] text-ink-500">Khata ledger & credit tracking</p>
+  </div>
   <a href="/mechanics/add"
-     class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-1">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+     class="inline-flex items-center gap-1.5 bg-accent-500 hover:bg-accent-600 text-ink-900 text-[13px] font-bold px-3.5 py-2 rounded-md shadow-sm transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
     Add Mechanic
   </a>
 </div>
 
-<!-- ─── Date Filter ──────────────────────────────────────── -->
-<form method="GET" action="/mechanics" class="mb-4" id="dateFilterForm">
-  <!-- Preserve existing search params -->
-  {% if query %}<input type="hidden" name="q" value="{{ query }}" />{% endif %}
-
-  <div class="flex flex-wrap items-center gap-2 mb-2">
-    <button type="submit" name="date_filter" value="all"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border
-            {% if date_filter == 'all' %}bg-brand-600 text-white border-brand-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
-      All
-    </button>
-    <button type="submit" name="date_filter" value="this_month"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border
-            {% if date_filter == 'this_month' %}bg-brand-600 text-white border-brand-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
-      This Month
-    </button>
-    <button type="submit" name="date_filter" value="last_7"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border
-            {% if date_filter == 'last_7' %}bg-brand-600 text-white border-brand-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
-      Last 7 Days
-    </button>
-    <button type="button" id="customRangeToggle"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border
-            {% if date_filter == 'custom' %}bg-brand-600 text-white border-brand-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
-      Custom Range
-    </button>
+<!-- ─── Summary Strip ─── -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card p-3 {% if total_outstanding > 0 %}border-rose-200{% endif %}">
+    <p class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">Outstanding</p>
+    <p class="text-xl font-bold tabular mt-0.5 {% if total_outstanding > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">₹{{ "{:,.0f}".format(total_outstanding) }}</p>
   </div>
-
-  <!-- Custom date range inputs -->
-  <div id="customRangeFields" class="{% if date_filter != 'custom' %}hidden{% endif %} flex flex-wrap items-end gap-2 mb-2">
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">From</label>
-      <input type="text" name="date_from" value="{{ date_from }}" placeholder="DD/MM/YYYY" maxlength="10"
-             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-32 outline-none focus:ring-2 focus:ring-brand-300 date-input" />
-    </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">To</label>
-      <input type="text" name="date_to" value="{{ date_to }}" placeholder="DD/MM/YYYY" maxlength="10"
-             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-32 outline-none focus:ring-2 focus:ring-brand-300 date-input" />
-    </div>
-    <input type="hidden" name="date_filter" value="custom" id="customFilterHidden" disabled />
-    <button type="submit" onclick="document.getElementById('customFilterHidden').disabled=false"
-            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-1.5 active:scale-95 transition-all duration-200">
-      Apply
-    </button>
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card p-3">
+    <p class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">
+      {% if date_filter == 'last_7' %}7-Day Rev{% elif date_filter == 'custom' %}Filtered Rev{% else %}Period Rev{% endif %}
+    </p>
+    <p class="text-xl font-bold text-ink-900 tabular mt-0.5">₹{{ "{:,.0f}".format(total_filtered_revenue) }}</p>
   </div>
-</form>
-
-<!-- ─── Summary Tiles ────────────────────────────────────── -->
-<div class="grid grid-cols-1 sm:grid-cols-2 {% if total_outstanding > 0 %}md:grid-cols-3{% endif %} gap-4 mb-6">
-  <!-- Total Outstanding -->
-  {% if total_outstanding > 0 %}
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-600">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/></svg>
-    </div>
-    <div>
-      <p class="text-xs text-amber-600 font-medium">Total Outstanding</p>
-      <p class="text-xl font-bold text-amber-800">₹{{ "%.2f"|format(total_outstanding) }}</p>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Period Revenue -->
-  <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-    </div>
-    <div>
-      <p class="text-xs text-green-600 font-medium">
-        {% if date_filter == 'all' %}Total Revenue
-        {% elif date_filter == 'last_7' %}Last 7 Days Revenue
-        {% elif date_filter == 'custom' %}Filtered Revenue
-        {% else %}This Month Revenue{% endif %}
-      </p>
-      <p class="text-xl font-bold text-green-800">₹{{ "%.2f"|format(total_filtered_revenue) }}</p>
-    </div>
-  </div>
-
-  <!-- Period Profit -->
-  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-600">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-    </div>
-    <div>
-      <p class="text-xs text-emerald-600 font-medium">
-        {% if date_filter == 'all' %}Total Profit
-        {% elif date_filter == 'last_7' %}Last 7 Days Profit
-        {% elif date_filter == 'custom' %}Filtered Profit
-        {% else %}This Month Profit{% endif %}
-      </p>
-      <p class="text-xl font-bold text-emerald-800">₹{{ "%.2f"|format(total_filtered_profit) }}</p>
-    </div>
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card p-3 col-span-2 sm:col-span-1">
+    <p class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">Period Profit</p>
+    <p class="text-xl font-bold tabular mt-0.5 {% if total_filtered_profit >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">₹{{ "{:,.0f}".format(total_filtered_profit) }}</p>
   </div>
 </div>
 
-<!-- Search -->
-<form method="GET" action="/mechanics" class="mb-4">
-  <input type="hidden" name="date_filter" value="{{ date_filter }}" />
-  {% if date_filter == 'custom' %}
-  <input type="hidden" name="date_from" value="{{ date_from }}" />
-  <input type="hidden" name="date_to" value="{{ date_to }}" />
-  {% endif %}
-  <div class="flex gap-2">
-    <input type="text" name="q" value="{{ query }}" placeholder="Search by name, phone, or shop..."
-           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-    <button type="submit"
-            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
-      Search
-    </button>
-    {% if query %}
-    <a href="/mechanics?date_filter={{ date_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 transition">Clear</a>
-    {% endif %}
-  </div>
-</form>
+<!-- ─── Combined Filter Bar ─── -->
+<form method="GET" action="/mechanics" class="bg-white border border-ink-200 rounded-lg shadow-card p-3 mb-4" id="dateFilterForm">
+  {% if query %}<input type="hidden" name="q" value="{{ query }}" />{% endif %}
 
-<!-- Serial Number Lookup -->
-<form method="GET" action="/mechanics" class="mb-6">
-  <div class="flex gap-2">
-    <div class="relative flex-1">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      </div>
-      <input type="text" name="serial" value="{{ serial_query }}" placeholder="Look up serial number..."
-             class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-500 outline-none transition" />
+  <div class="flex flex-wrap gap-1.5 mb-3">
+    {% for label, val in [('All', 'all'), ('This Month', 'this_month'), ('Last 7 Days', 'last_7')] %}
+    <button type="submit" name="date_filter" value="{{ val }}"
+            class="px-3 py-1 rounded-md text-[12px] font-semibold transition border
+            {% if date_filter == val %}bg-ink-900 text-white border-ink-900{% else %}bg-white text-ink-600 border-ink-200 hover:border-ink-400{% endif %}">
+      {{ label }}
+    </button>
+    {% endfor %}
+    <button type="button" id="customRangeToggle"
+            class="px-3 py-1 rounded-md text-[12px] font-semibold transition border
+            {% if date_filter == 'custom' %}bg-ink-900 text-white border-ink-900{% else %}bg-white text-ink-600 border-ink-200 hover:border-ink-400{% endif %}">
+      Custom
+    </button>
+  </div>
+
+  <div id="customRangeFields" class="{% if date_filter != 'custom' %}hidden{% endif %} flex flex-wrap items-end gap-2">
+    <div>
+      <label class="block text-[10px] font-bold text-ink-500 uppercase tracking-wider mb-1">From</label>
+      <input type="text" name="date_from" value="{{ date_from }}" placeholder="DD/MM/YYYY" maxlength="10"
+             class="border border-ink-300 rounded-md px-2.5 py-1.5 text-[13px] w-28 outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 date-input" />
     </div>
-    <button type="submit"
-            class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg px-4 py-2 active:scale-95 transition-all duration-200">
-      Lookup
-    </button>
-    {% if serial_query %}
-    <a href="/mechanics" class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 transition">Clear</a>
-    {% endif %}
+    <div>
+      <label class="block text-[10px] font-bold text-ink-500 uppercase tracking-wider mb-1">To</label>
+      <input type="text" name="date_to" value="{{ date_to }}" placeholder="DD/MM/YYYY" maxlength="10"
+             class="border border-ink-300 rounded-md px-2.5 py-1.5 text-[13px] w-28 outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 date-input" />
+    </div>
+    <input type="hidden" name="date_filter" value="custom" id="customFilterHidden" disabled />
+    <button type="submit" onclick="document.getElementById('customFilterHidden').disabled=false"
+            class="bg-ink-900 hover:bg-ink-800 text-white text-[13px] font-semibold rounded-md px-3 py-1.5 transition">Apply</button>
   </div>
 </form>
 
-<!-- Serial Number Results -->
-{% if serial_query %}
-<div class="mb-6">
-  {% if serial_results %}
-  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-    Found {{ serial_results|length }} result{{ 's' if serial_results|length > 1 }} for "{{ serial_query }}"
-  </h2>
-  <div class="space-y-2">
-    {% for r in serial_results %}
-    <div class="bg-white rounded-xl shadow-sm border border-amber-100 p-4">
-      <div class="flex items-start justify-between mb-2">
-        <div>
-          <a href="/mechanics/{{ r.mechanic_id }}" class="font-semibold text-brand-600 hover:underline">{{ r.mechanic_name }}</a>
-          {% if r.mechanic_shop %}
-          <span class="text-xs text-gray-400 ml-1">· {{ r.mechanic_shop }}</span>
-          {% endif %}
-          {% if r.mechanic_phone %}
-          <p class="text-xs text-gray-400">{{ r.mechanic_phone }}</p>
-          {% endif %}
-        </div>
-        <span class="text-xs text-gray-400 whitespace-nowrap">{{ r.date.strftime('%d/%m/%Y') if r.date else '—' }}</span>
+<!-- ─── Search + Serial Lookup (two inline bars) ─── -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+  <form method="GET" action="/mechanics">
+    <input type="hidden" name="date_filter" value="{{ date_filter }}" />
+    {% if date_filter == 'custom' %}
+    <input type="hidden" name="date_from" value="{{ date_from }}" />
+    <input type="hidden" name="date_to" value="{{ date_to }}" />
+    {% endif %}
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search mechanics..."
+               class="w-full border border-ink-300 rounded-md pl-8 pr-3 py-1.5 text-[13px] focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
       </div>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-700">{{ r.battery_model }}</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">S/N: {{ r.serial_number }}</p>
+      <button type="submit" class="bg-ink-900 hover:bg-ink-800 text-white text-[13px] font-semibold rounded-md px-3 py-1.5 transition">Search</button>
+      {% if query %}
+      <a href="/mechanics?date_filter={{ date_filter }}&date_from={{ date_from }}&date_to={{ date_to }}"
+         class="border border-ink-200 text-ink-600 text-[13px] font-medium rounded-md px-3 py-1.5 hover:bg-ink-50 transition">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <form method="GET" action="/mechanics">
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-accent-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" name="serial" value="{{ serial_query }}" placeholder="Lookup serial number..."
+               class="w-full border border-ink-300 rounded-md pl-8 pr-3 py-1.5 text-[13px] focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+      </div>
+      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-ink-900 text-[13px] font-bold rounded-md px-3 py-1.5 transition">Lookup</button>
+      {% if serial_query %}<a href="/mechanics" class="border border-ink-200 text-ink-600 text-[13px] font-medium rounded-md px-3 py-1.5 hover:bg-ink-50 transition">Clear</a>{% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- ─── Serial Lookup Results ─── -->
+{% if serial_query %}
+<div class="mb-4 bg-white border border-ink-200 rounded-lg shadow-card">
+  <div class="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+    <span class="text-[10px] font-bold bg-accent-100 text-accent-700 px-2 py-0.5 rounded uppercase tracking-wider">Serial Lookup</span>
+    <span class="text-[12px] text-ink-600">"{{ serial_query }}"</span>
+    {% if serial_results %}<span class="text-[11px] text-ink-500">— {{ serial_results|length }} result{{ 's' if serial_results|length > 1 }}</span>{% endif %}
+  </div>
+  {% if serial_results %}
+  <div class="divide-y divide-ink-100">
+    {% for r in serial_results %}
+    <div class="px-4 py-3 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+          <a href="/mechanics/{{ r.mechanic_id }}" class="text-[13px] font-bold text-brand-600 hover:text-brand-800 transition">{{ r.mechanic_name }}</a>
+          {% if r.mechanic_shop %}<span class="text-[11px] text-ink-500">· {{ r.mechanic_shop }}</span>{% endif %}
         </div>
-        <p class="text-sm font-semibold text-gray-900">₹{{ "%.2f"|format(r.amount) }}</p>
+        <p class="text-[12px] text-ink-700">{{ r.battery_model }}</p>
+        <p class="text-[11px] font-mono text-ink-500 mt-0.5">{{ r.serial_number }}</p>
+        {% if r.mechanic_phone %}<p class="text-[11px] text-ink-500">{{ r.mechanic_phone }}</p>{% endif %}
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-[13px] font-bold text-ink-900 tabular">₹{{ "{:,.0f}".format(r.amount) }}</p>
+        <p class="text-[11px] text-ink-500">{{ r.date.strftime('%d/%m/%Y') if r.date else '—' }}</p>
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-    <p class="text-sm text-gray-500">No records found for serial number "<span class="font-medium text-gray-700">{{ serial_query }}</span>"</p>
+  <div class="px-4 py-6 text-center">
+    <p class="text-[13px] text-ink-500">No records found for "<span class="font-semibold text-ink-700">{{ serial_query }}</span>"</p>
   </div>
   {% endif %}
 </div>
 {% endif %}
 
-<!-- Mechanic List -->
+<!-- ─── Mechanic List ─── -->
 {% if mechanics %}
-<div class="space-y-3">
+<div class="space-y-2">
   {% for m in mechanics %}
   <a href="/mechanics/{{ m._id }}"
-     class="block bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="font-semibold text-gray-900">{{ m.name }}</h3>
-        <p class="text-xs text-gray-500">{{ m.shop_name or 'No shop name' }} · {{ m.phone }}</p>
-        {% if m.period_revenue > 0 %}
-        <p class="text-xs text-green-600 font-medium mt-1">Period: ₹{{ "%.2f"|format(m.period_revenue) }}</p>
-        {% endif %}
-      </div>
-      <div class="text-right">
+     class="flex items-center justify-between bg-white border border-ink-100 rounded-lg shadow-card px-4 py-3 hover:shadow-card-hover hover:border-ink-200 transition group">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2 mb-0.5">
+        <p class="text-[13px] font-bold text-ink-900 truncate">{{ m.name }}</p>
         {% if m.balance > 0 %}
-          <p class="text-lg font-bold text-red-600">₹{{ "%.2f"|format(m.balance) }}</p>
-          <p class="text-xs text-red-400">pending</p>
-        {% elif m.balance == 0 and m.total_credit > 0 %}
-          <p class="text-lg font-bold text-green-600">✓ Settled</p>
-          <p class="text-xs text-green-400">no dues</p>
-        {% else %}
-          <p class="text-sm text-gray-400">No transactions</p>
+        <span class="text-[10px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded shrink-0">DUE</span>
+        {% elif m.total_credit > 0 %}
+        <span class="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded shrink-0">SETTLED</span>
         {% endif %}
       </div>
+      <p class="text-[11px] text-ink-500 truncate">{{ m.shop_name or 'No shop' }} · {{ m.phone }}</p>
+      {% if m.period_revenue > 0 %}
+      <p class="text-[11px] text-ink-600 font-medium mt-0.5 tabular">Period: ₹{{ "{:,.0f}".format(m.period_revenue) }}</p>
+      {% endif %}
+    </div>
+    <div class="text-right ml-4 shrink-0">
+      {% if m.balance > 0 %}
+        <p class="text-base font-bold text-rose-700 tabular">₹{{ "{:,.0f}".format(m.balance) }}</p>
+        <p class="text-[10px] text-rose-500 font-semibold uppercase">pending</p>
+      {% elif m.balance == 0 and m.total_credit > 0 %}
+        <p class="text-base font-bold text-emerald-700">✓ Settled</p>
+      {% else %}
+        <p class="text-[12px] text-ink-400">No transactions</p>
+      {% endif %}
+      <p class="text-[10px] text-ink-400 group-hover:text-accent-600 transition mt-0.5">View ledger →</p>
     </div>
   </a>
   {% endfor %}
 </div>
 {% else %}
+<div class="bg-white border border-ink-200 rounded-lg shadow-card px-4 py-8 text-center">
   {% if query %}
-    <p class="text-gray-400 text-sm">No mechanics match your search.</p>
+  <p class="text-[13px] text-ink-500">No mechanics match your search.</p>
   {% else %}
-    <p class="text-gray-400 text-sm">No mechanics found for selected period. <a href="/mechanics" class="text-brand-600 underline">View all →</a></p>
+  <p class="text-[13px] text-ink-500">No mechanics found.
+    <a href="/mechanics/add" class="text-accent-600 font-semibold hover:underline">Add first mechanic →</a>
+  </p>
   {% endif %}
+</div>
 {% endif %}
 
-<!-- ─── Scripts ───────────────────────────────────────────── -->
 <script>
-  // Toggle custom range fields
   document.getElementById('customRangeToggle').addEventListener('click', function() {
-    const fields = document.getElementById('customRangeFields');
-    fields.classList.toggle('hidden');
+    document.getElementById('customRangeFields').classList.toggle('hidden');
   });
-
-  // Auto-format DD/MM/YYYY date inputs
   document.querySelectorAll('.date-input').forEach(function(input) {
     input.addEventListener('input', function() {
       let val = this.value.replace(/\D/g, '');
       if (val.length > 8) val = val.substring(0, 8);
-      if (val.length >= 5) {
-        this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
-      } else if (val.length >= 3) {
-        this.value = val.substring(0, 2) + '/' + val.substring(2);
-      } else {
-        this.value = val;
-      }
+      if (val.length >= 5) this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+      else if (val.length >= 3) this.value = val.substring(0, 2) + '/' + val.substring(2);
+      else this.value = val;
     });
   });
 </script>
 {% endblock %}
-

@@ -111,19 +111,29 @@ def sales_history():
     # Fetch sales
     sales = list(db.sales.find(filter_query).sort("date", -1))
 
-    # Attach customer names, normalize pricing, and apply search filter
-    filtered_sales = []
+    # Bulk-fetch customer names (avoid N+1)
     for sale in sales:
         normalize_sale(sale, db)
-        customer = db.customers.find_one({"_id": sale.get("customer_id")})
-        sale["customer_name"] = customer["name"] if customer else "Unknown"
-        sale["customer_phone"] = customer["phone"] if customer else ""
+    customer_ids = [s.get("customer_id") for s in sales if s.get("customer_id")]
+    customer_map = {}
+    if customer_ids:
+        for c in db.customers.find({"_id": {"$in": customer_ids}}, {"name": 1, "phone": 1}):
+            customer_map[c["_id"]] = c
+    for sale in sales:
+        c = customer_map.get(sale.get("customer_id"), {})
+        sale["customer_name"] = c.get("name", "Unknown")
+        sale["customer_phone"] = c.get("phone", "")
 
-        if query:
-            if (query.lower() not in sale["customer_name"].lower()
-                    and query.lower() not in sale.get("battery_model", "").lower()
-                    and query not in sale.get("customer_phone", "")):
-                continue
+    # Apply search filter in Python (post-fetch)
+    filtered_sales = []
+    ql = query.lower() if query else ""
+    for sale in sales:
+        if ql and (
+            ql not in sale["customer_name"].lower()
+            and ql not in sale.get("battery_model", "").lower()
+            and ql not in sale.get("customer_phone", "")
+        ):
+            continue
         filtered_sales.append(sale)
 
     # Summary stats

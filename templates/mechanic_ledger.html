@@ -2,299 +2,324 @@
 {% block title %}{{ mechanic.name }} — Ledger{% endblock %}
 
 {% block content %}
-<!-- html5-qrcode library for barcode/QR scanning -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-<!-- Header -->
-<div class="flex items-center justify-between mb-6">
+<!-- ─── Header ─── -->
+<div class="flex items-start justify-between gap-3 mb-4">
   <div>
-    <h1 class="text-2xl font-bold">{{ mechanic.name }}</h1>
-    <p class="text-sm text-gray-500">{{ mechanic.shop_name or '' }} · {{ mechanic.phone }}</p>
+    <a href="/mechanics" class="text-[11px] font-medium text-ink-500 hover:text-ink-800 transition">← Mechanics</a>
+    <h1 class="text-xl font-bold text-ink-900 mt-0.5">{{ mechanic.name }}</h1>
+    <p class="text-[12px] text-ink-500">{{ mechanic.shop_name or '' }}{% if mechanic.shop_name %} · {% endif %}{{ mechanic.phone }}</p>
   </div>
-  <div class="flex gap-2">
+  <div class="flex gap-2 shrink-0">
     <a href="/mechanics/edit/{{ mechanic._id }}"
-       class="border border-gray-300 text-gray-600 text-sm font-medium rounded-lg px-3 py-2 hover:bg-gray-50 transition">Edit</a>
+       class="border border-ink-200 text-ink-600 text-[12px] font-semibold rounded-md px-3 py-1.5 hover:bg-ink-50 transition">Edit</a>
     <form method="POST" action="/mechanics/delete/{{ mechanic._id }}"
           onsubmit="return confirm('Delete {{ mechanic.name }} and all their records?')">
-      <button type="submit" class="border border-red-300 text-red-600 text-sm font-medium rounded-lg px-3 py-2 hover:bg-red-50 transition">Delete</button>
+      <button type="submit" class="border border-rose-200 text-rose-600 text-[12px] font-semibold rounded-md px-3 py-1.5 hover:bg-rose-50 transition">Delete</button>
     </form>
   </div>
 </div>
 
-<!-- Balance Summary -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-    <p class="text-xs text-gray-500">Total Credit</p>
-    <p class="text-lg font-bold text-gray-900">₹{{ "%.2f"|format(total_credit) }}</p>
+<!-- ─── Balance Summary Strip ─── -->
+<div class="grid grid-cols-3 gap-2.5 mb-4">
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card p-3 text-center">
+    <p class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">Total Credit</p>
+    <p class="text-xl font-bold text-ink-900 tabular mt-0.5">₹{{ "{:,.0f}".format(total_credit) }}</p>
   </div>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-    <p class="text-xs text-gray-500">Total Paid</p>
-    <p class="text-lg font-bold text-green-600">₹{{ "%.2f"|format(total_paid) }}</p>
+  <div class="bg-white border border-ink-200 rounded-lg shadow-card p-3 text-center">
+    <p class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">Total Paid</p>
+    <p class="text-xl font-bold text-emerald-700 tabular mt-0.5">₹{{ "{:,.0f}".format(total_paid) }}</p>
   </div>
-  <div class="rounded-xl shadow-sm border p-4 text-center
-    {% if balance > 0 %}bg-red-50 border-red-200{% else %}bg-green-50 border-green-200{% endif %}">
-    <p class="text-xs {% if balance > 0 %}text-red-500{% else %}text-green-500{% endif %}">Balance</p>
-    <p class="text-lg font-bold {% if balance > 0 %}text-red-700{% else %}text-green-700{% endif %}">
-      ₹{{ "%.2f"|format(balance) }}
+  <div class="rounded-lg shadow-card border p-3 text-center
+    {% if balance > 0 %}bg-rose-50 border-rose-200{% else %}bg-emerald-50 border-emerald-200{% endif %}">
+    <p class="text-[10px] font-bold uppercase tracking-wider {% if balance > 0 %}text-rose-500{% else %}text-emerald-500{% endif %}">Balance</p>
+    <p class="text-xl font-bold tabular mt-0.5 {% if balance > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">
+      ₹{{ "{:,.0f}".format(balance) }}
     </p>
   </div>
 </div>
 
-<!-- ─── Action Forms (side by side) ─────────────────────── -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+<!-- ─── Action Forms ─── -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
 
-  <!-- Add Credit Sale (multi-battery) -->
+  <!-- Add Credit Sale -->
   <form method="POST" action="/mechanics/{{ mechanic._id }}/sale" id="creditSaleForm"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
-    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Add Credit Sale
-    </h3>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Date</label>
-      <input type="text" name="sale_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition date-input" />
+        class="bg-white border border-ink-200 rounded-lg shadow-card">
+    <div class="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-rose-100 text-rose-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      </span>
+      <h3 class="text-[12px] font-bold text-ink-500 uppercase tracking-wider">Add Credit Sale</h3>
     </div>
+    <div class="p-4 space-y-3">
+      <div>
+        <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Date</label>
+        <input type="text" name="sale_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition date-input" />
+      </div>
 
-    <!-- Dynamic battery entries container -->
-    <div id="batteryEntries">
-      <!-- First battery entry (template) -->
-      <div class="battery-entry border border-gray-200 rounded-lg p-3 space-y-3 mb-3" data-index="0">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Battery #1</span>
-          <button type="button" class="remove-entry-btn hidden text-red-400 hover:text-red-600 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-red-50 transition-colors"
-                  onclick="removeBatteryEntry(this)">✕ Remove</button>
-        </div>
-        <!-- Battery search -->
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Battery</label>
-          <div class="relative battery-dropdown">
-            <input type="text" class="battery-search w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-500 transition pr-8"
-                   autocomplete="off" placeholder="Search battery..." />
-            <input type="hidden" class="battery-id-hidden" required />
-            <button type="button" class="battery-clear hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5" onclick="clearMechBattery(this)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <ul class="battery-list hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-              {% for b in batteries %}
-              <li class="battery-opt px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 transition-colors duration-100"
-                  data-id="{{ b._id }}" data-price="{{ b.mechanic_price if b.mechanic_price else b.selling_price }}" data-stock="{{ b.stock }}"
-                  data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
-                <span class="font-medium">{{ b.brand }} {{ b.model }}</span>
-                <span class="text-gray-400 text-xs ml-1">({{ b.stock }})</span>
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-        <!-- Quantity + Unit Price side by side -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Quantity</label>
-            <input type="number" class="entry-qty w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" min="1" value="1" />
+      <div id="batteryEntries">
+        <div class="battery-entry border border-ink-200 rounded-md p-3 space-y-3 mb-3 bg-ink-50" data-index="0">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-ink-500 uppercase tracking-wider">Battery #1</span>
+            <button type="button" class="remove-entry-btn hidden text-rose-500 hover:text-rose-700 text-[11px] font-semibold px-2 py-0.5 rounded hover:bg-rose-50 transition"
+                    onclick="removeBatteryEntry(this)">✕ Remove</button>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">Unit Price (₹)</label>
-            <input type="number" step="0.01" class="entry-price w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" min="0" value="0" placeholder="0.00" />
+            <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Battery</label>
+            <div class="relative battery-dropdown">
+              <input type="text" class="battery-search w-full border border-ink-300 rounded-md px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition pr-8"
+                     autocomplete="off" placeholder="Search battery..." />
+              <input type="hidden" class="battery-id-hidden" required />
+              <button type="button" class="battery-clear hidden absolute right-2 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700 p-0.5 transition" onclick="clearMechBattery(this)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+              <ul class="battery-list hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-ink-200 rounded-md shadow-lg max-h-44 overflow-y-auto divide-y divide-ink-100">
+                {% for b in batteries %}
+                <li class="battery-opt flex items-center justify-between px-3 py-2 text-[13px] cursor-pointer hover:bg-accent-50 transition-colors"
+                    data-id="{{ b._id }}" data-price="{{ b.mechanic_price if b.mechanic_price else b.selling_price }}" data-stock="{{ b.stock }}"
+                    data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
+                  <div class="min-w-0">
+                    <span class="font-semibold text-ink-900">{{ b.brand }} {{ b.model }}</span>
+                    <span class="text-ink-500 text-[11px] ml-1.5">₹{{ "{:,.0f}".format(b.mechanic_price if b.mechanic_price else b.selling_price) }}</span>
+                  </div>
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0
+                    {% if b.stock == 0 %}bg-rose-100 text-rose-700{% elif b.stock <= 2 %}bg-accent-100 text-accent-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                    {{ b.stock }}
+                  </span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
           </div>
-        </div>
-        <!-- Serial Numbers -->
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Serial Number(s)</label>
-          <div class="flex gap-2">
-            <input type="text" class="entry-serial flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition"
-                   placeholder="Comma-separated (e.g. SN1, SN2)" />
-            <button type="button" class="scan-btn bg-gray-700 hover:bg-gray-800 text-white rounded-lg px-3 py-2 transition flex items-center"
-                    title="Scan barcode / QR code">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-            </button>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Qty</label>
+              <input type="number" class="entry-qty w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition" min="1" value="1" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Unit Price (₹)</label>
+              <input type="number" step="0.01" class="entry-price w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition" min="0" value="0" placeholder="0" />
+            </div>
           </div>
-          <p class="mt-1 text-[10px] text-gray-400 serial-hint">Enter serial numbers separated by commas</p>
-        </div>
-        <!-- Per-entry subtotal -->
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5">
-          <span class="text-xs text-gray-500">Subtotal</span>
-          <span class="entry-subtotal text-sm font-semibold text-gray-700">₹0.00</span>
+          <div>
+            <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Serial Number(s)</label>
+            <div class="flex gap-2">
+              <input type="text" class="entry-serial flex-1 border border-ink-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition"
+                     placeholder="Comma-separated (e.g. SN1, SN2)" />
+              <button type="button" class="scan-btn bg-ink-800 hover:bg-ink-700 text-white rounded-md px-3 py-2 transition flex items-center gap-1 text-[12px]" title="Scan barcode">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+              </button>
+            </div>
+            <p class="mt-1 text-[10px] text-ink-500 serial-hint">Count must match quantity</p>
+          </div>
+          <div class="flex items-center justify-between bg-white border border-ink-200 rounded-md px-3 py-1.5">
+            <span class="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Subtotal</span>
+            <span class="entry-subtotal text-[13px] font-bold text-ink-900 tabular">₹0</span>
+          </div>
         </div>
       </div>
+
+      <button type="button" id="addBatteryBtn"
+              class="w-full border-2 border-dashed border-ink-200 hover:border-accent-400 text-ink-500 hover:text-accent-700 text-[13px] font-semibold rounded-md px-4 py-2 transition flex items-center justify-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Another Battery
+      </button>
+
+      <div class="flex items-center justify-between bg-ink-900 text-white rounded-md px-4 py-2.5">
+        <span class="text-[12px] font-semibold text-ink-300">Grand Total</span>
+        <span id="grandTotal" class="text-lg font-bold text-accent-400 tabular">₹0</span>
+      </div>
+
+      <input type="hidden" name="batteries_json" id="batteriesJson" />
+
+      <button type="submit"
+              class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-md px-4 py-2.5 text-sm transition active:scale-[0.99]">
+        Add Credit ↑
+      </button>
     </div>
-
-    <!-- Add another battery button -->
-    <button type="button" id="addBatteryBtn"
-            class="w-full border-2 border-dashed border-gray-300 hover:border-brand-400 text-gray-500 hover:text-brand-600 text-sm font-medium rounded-lg px-4 py-2.5 transition-colors duration-200 flex items-center justify-center gap-1.5">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Add Another Battery
-    </button>
-
-    <!-- Grand total -->
-    <div class="flex items-center justify-between bg-brand-50 rounded-lg px-4 py-3 border border-brand-100">
-      <span class="text-sm font-semibold text-brand-700">Grand Total</span>
-      <span id="grandTotal" class="text-lg font-bold text-brand-700">₹0.00</span>
-    </div>
-
-    <!-- Hidden JSON payload -->
-    <input type="hidden" name="batteries_json" id="batteriesJson" />
-
-    <button type="submit"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition active:scale-95">
-      Add Credit ↑
-    </button>
   </form>
 
   <!-- Record Payment -->
   <form method="POST" action="/mechanics/{{ mechanic._id }}/payment"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
-    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-      Record Payment
-    </h3>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Date</label>
-      <input type="text" name="payment_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition date-input" />
+        class="bg-white border border-ink-200 rounded-lg shadow-card">
+    <div class="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-100 text-emerald-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      </span>
+      <h3 class="text-[12px] font-bold text-ink-500 uppercase tracking-wider">Record Payment</h3>
     </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Amount (₹)</label>
-      <input type="number" step="0.01" name="amount" required min="0" placeholder="0.00"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" />
+    <div class="p-4 space-y-3">
+      <div>
+        <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Date</label>
+        <input type="text" name="payment_date" value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition date-input" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Amount (₹)</label>
+        <input type="number" step="0.01" name="amount" required min="0" placeholder="0"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition" />
+        {% if balance > 0 %}
+        <p class="mt-1 text-[11px] text-rose-600 font-medium tabular">Outstanding: ₹{{ "{:,.0f}".format(balance) }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Payment mode segmented -->
+      <div>
+        <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Payment Mode</label>
+        <div class="grid grid-cols-4 gap-1.5" id="payModeGroup">
+          {% for mode in ['Cash', 'UPI', 'Card', 'Bank Transfer'] %}
+          <label class="pay-mode-btn cursor-pointer">
+            <input type="radio" name="payment_mode" value="{{ mode }}" class="sr-only" {% if mode == 'Cash' %}checked{% endif %} />
+            <span class="flex items-center justify-center text-[11px] font-semibold py-2 rounded-md border border-ink-200 text-ink-600 hover:border-accent-400 transition select-none leading-tight text-center px-1">{{ mode }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Notes <span class="font-normal text-ink-400">(optional)</span></label>
+        <input type="text" name="notes" placeholder="e.g. Partial payment"
+               class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 transition" />
+      </div>
+
+      <button type="submit"
+              class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-md px-4 py-2.5 text-sm transition active:scale-[0.99]">
+        Record Payment ↓
+      </button>
     </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Payment Mode</label>
-      <select name="payment_mode" required
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition bg-white">
-        <option value="Cash">Cash</option>
-        <option value="UPI">UPI</option>
-        <option value="Card">Card</option>
-        <option value="Bank Transfer">Bank Transfer</option>
-      </select>
-    </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
-      <input type="text" name="notes" placeholder="e.g. Partial payment"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none transition" />
-    </div>
-    <button type="submit"
-            class="w-full bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg px-4 py-2 text-sm transition">
-      Record Payment ↓
-    </button>
   </form>
 </div>
 
-<!-- ─── Scanner Modal ───────────────────────────────────── -->
+<!-- ─── Scanner Modal ─── -->
 <div id="scannerModal" class="fixed inset-0 z-50 hidden">
-  <div class="absolute inset-0 bg-black/60" onclick="closeScanner()"></div>
-  <div class="relative mx-auto mt-16 max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-      <h3 class="text-sm font-semibold text-gray-700">Scan Barcode / QR Code</h3>
-      <button onclick="closeScanner()" class="text-gray-400 hover:text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+  <div class="absolute inset-0 bg-ink-950/70 backdrop-blur-sm" onclick="closeScanner()"></div>
+  <div class="relative mx-auto mt-16 max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-ink-100 bg-ink-50">
+      <h3 class="text-[13px] font-bold text-ink-900">Scan Barcode / QR Code</h3>
+      <button onclick="closeScanner()" class="text-ink-400 hover:text-ink-700 p-1 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     <div id="qr-reader" style="width: 100%;"></div>
-    <p class="text-center text-xs text-gray-400 py-3">Point camera at the barcode or QR code</p>
+    <p class="text-center text-[11px] text-ink-400 py-3">Point camera at the barcode or QR code</p>
   </div>
 </div>
 
-<!-- ─── Transaction History ─────────────────────────────── -->
-<h2 class="text-lg font-semibold mb-3">Transaction History</h2>
+<!-- ─── Transaction History ─── -->
+<div class="bg-white border border-ink-200 rounded-lg shadow-card">
+  <div class="px-4 py-2.5 border-b border-ink-100">
+    <h2 class="text-[13px] font-bold text-ink-900 uppercase tracking-wider">Transaction History</h2>
+  </div>
 
-{% if transactions %}
-<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-  <table class="w-full text-sm text-left">
-    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-      <tr>
-        <th class="px-4 py-3">Date</th>
-        <th class="px-4 py-3">Description</th>
-        <th class="px-4 py-3 text-right">Credit ↑</th>
-        <th class="px-4 py-3 text-right">Payment ↓</th>
-        <th class="px-4 py-3 text-center">Receipt</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100">
-      {% for t in transactions %}
-      <tr class="hover:bg-gray-50 transition-colors duration-200">
-        <td class="px-4 py-3 whitespace-nowrap">{{ t.date.strftime('%d/%m/%Y') }}</td>
-        <td class="px-4 py-3">
-          {% if t.type == 'credit' %}
-            <span class="text-red-600">{{ t.description }}</span>
-          {% else %}
-            <span class="text-green-600">{{ t.description }}</span>
-          {% endif %}
-        </td>
-        <td class="px-4 py-3 text-right">
-          {% if t.type == 'credit' %}
-            <span class="font-medium text-red-600">₹{{ "%.2f"|format(t.amount) }}</span>
-          {% endif %}
-        </td>
-        <td class="px-4 py-3 text-right">
-          {% if t.type == 'payment' %}
-            <span class="font-medium text-green-600">₹{{ "%.2f"|format(t.amount) }}</span>
-          {% endif %}
-        </td>
-        <td class="px-4 py-3 text-center">
-          {% if t.type == 'payment' and t.payment_id %}
-            <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-brand-600 hover:underline text-xs font-medium">View</a>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+  {% if transactions %}
+  <div class="hidden md:block overflow-x-auto">
+    <table class="w-full text-[13px] text-left">
+      <thead class="bg-ink-50 text-[10px] font-bold text-ink-500 uppercase tracking-wider">
+        <tr>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2 text-right">Credit ↑</th>
+          <th class="px-4 py-2 text-right">Payment ↓</th>
+          <th class="px-4 py-2 text-center">Receipt</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-ink-100">
+        {% for t in transactions %}
+        <tr class="hover:bg-ink-50 transition-colors">
+          <td class="px-4 py-2 whitespace-nowrap text-ink-600 tabular text-[12px]">{{ t.date.strftime('%d/%m/%y') }}</td>
+          <td class="px-4 py-2 truncate max-w-[220px] {% if t.type == 'credit' %}text-rose-700{% else %}text-emerald-700{% endif %} font-medium">
+            {{ t.description }}
+          </td>
+          <td class="px-4 py-2 text-right tabular">
+            {% if t.type == 'credit' %}
+            <span class="font-bold text-rose-700">₹{{ "{:,.0f}".format(t.amount) }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 text-right tabular">
+            {% if t.type == 'payment' %}
+            <span class="font-bold text-emerald-700">₹{{ "{:,.0f}".format(t.amount) }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 text-center">
+            {% if t.type == 'payment' and t.payment_id %}
+            <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-[12px] font-semibold text-brand-600 hover:text-brand-800 transition">View</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-<!-- Mobile transaction cards -->
-<div class="md:hidden space-y-2">
-  {% for t in transactions %}
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex items-center justify-between">
-    <div class="flex-1 min-w-0">
-      <p class="text-sm {% if t.type == 'credit' %}text-red-600{% else %}text-green-600{% endif %} truncate">{{ t.description }}</p>
-      <p class="text-xs text-gray-400">{{ t.date.strftime('%d/%m/%Y') }}</p>
-    </div>
-    <div class="text-right ml-3 shrink-0">
-      {% if t.type == 'credit' %}
-        <p class="text-sm font-semibold text-red-600">+₹{{ "%.2f"|format(t.amount) }}</p>
-        <p class="text-[10px] text-red-400">credit</p>
-      {% else %}
-        <p class="text-sm font-semibold text-green-600">-₹{{ "%.2f"|format(t.amount) }}</p>
-        {% if t.payment_id %}
-        <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-[10px] text-brand-600 font-medium hover:underline">Receipt →</a>
+  <div class="md:hidden divide-y divide-ink-100">
+    {% for t in transactions %}
+    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <p class="text-[13px] font-medium truncate {% if t.type == 'credit' %}text-rose-700{% else %}text-emerald-700{% endif %}">{{ t.description }}</p>
+        <p class="text-[11px] text-ink-500 tabular">{{ t.date.strftime('%d/%m/%y') }}</p>
+      </div>
+      <div class="text-right shrink-0">
+        {% if t.type == 'credit' %}
+        <p class="text-[13px] font-bold text-rose-700 tabular">+₹{{ "{:,.0f}".format(t.amount) }}</p>
+        <p class="text-[10px] text-rose-400 font-semibold uppercase">credit</p>
         {% else %}
-        <p class="text-[10px] text-green-400">paid</p>
+        <p class="text-[13px] font-bold text-emerald-700 tabular">-₹{{ "{:,.0f}".format(t.amount) }}</p>
+        {% if t.payment_id %}
+        <a href="/mechanics/receipt/{{ t.payment_id }}" class="text-[10px] text-brand-600 font-semibold hover:underline">Receipt →</a>
+        {% else %}
+        <p class="text-[10px] text-emerald-400 font-semibold uppercase">paid</p>
         {% endif %}
-      {% endif %}
+        {% endif %}
+      </div>
     </div>
+    {% endfor %}
   </div>
-  {% endfor %}
+  {% else %}
+  <div class="px-4 py-8 text-center">
+    <p class="text-[13px] text-ink-500">No transactions yet. Add a credit sale or record a payment above.</p>
+  </div>
+  {% endif %}
 </div>
-{% else %}
-<p class="text-gray-400 text-sm">No transactions yet. Add a credit sale or record a payment above.</p>
-{% endif %}
 
-<!-- ─── Scripts ─────────────────────────────────────────── -->
 <script>
-  // ─── Date auto-format ──────────────────────────────────────
-  document.querySelectorAll('.date-input').forEach(function (input) {
-    input.addEventListener('input', function () {
-      let val = this.value.replace(/\D/g, '');
-      if (val.length > 8) val = val.substring(0, 8);
-      if (val.length >= 5) {
-        this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
-      } else if (val.length >= 3) {
-        this.value = val.substring(0, 2) + '/' + val.substring(2);
+  // ─── Segmented payment mode ──────────────────────────────────
+  document.querySelectorAll('#payModeGroup label').forEach(lbl => {
+    const input = lbl.querySelector('input');
+    const span = lbl.querySelector('span');
+    function sync() {
+      if (input.checked) {
+        span.classList.add('border-accent-500', 'bg-accent-500', 'text-ink-900');
+        span.classList.remove('border-ink-200', 'text-ink-600');
       } else {
-        this.value = val;
+        span.classList.remove('border-accent-500', 'bg-accent-500', 'text-ink-900');
+        span.classList.add('border-ink-200', 'text-ink-600');
       }
+    }
+    sync();
+    input.addEventListener('change', () => {
+      document.querySelectorAll('#payModeGroup label span').forEach(s => {
+        s.classList.remove('border-accent-500', 'bg-accent-500', 'text-ink-900');
+        s.classList.add('border-ink-200', 'text-ink-600');
+      });
+      span.classList.add('border-accent-500', 'bg-accent-500', 'text-ink-900');
+      span.classList.remove('border-ink-200', 'text-ink-600');
     });
   });
 
-  // ─── Battery data (from server) ────────────────────────────
-  const batteryData = [
-    {% for b in batteries %}
-    { id: "{{ b._id }}", label: "{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})", price: {{ b.mechanic_price if b.mechanic_price else b.selling_price }}, stock: {{ b.stock }}, brand: "{{ b.brand }}", model: "{{ b.model }}" },
-    {% endfor %}
-  ];
+  // ─── Date auto-format ────────────────────────────────────────
+  document.querySelectorAll('.date-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+      let val = this.value.replace(/\D/g, '');
+      if (val.length > 8) val = val.substring(0, 8);
+      if (val.length >= 5) this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+      else if (val.length >= 3) this.value = val.substring(0, 2) + '/' + val.substring(2);
+      else this.value = val;
+    });
+  });
 
-  // ─── Searchable dropdown logic for a single entry ──────────
+  // ─── Battery search + entry logic ───────────────────────────
   function initBatterySearch(entry) {
     const searchInput = entry.querySelector('.battery-search');
     const hiddenInput = entry.querySelector('.battery-id-hidden');
@@ -329,49 +354,34 @@
         hiddenInput.dataset.price = this.dataset.price;
         list.classList.add('hidden');
         clearBtn.classList.remove('hidden');
-        // Auto-fill the editable price field
         entry.querySelector('.entry-price').value = this.dataset.price;
         updateEntrySubtotal(entry);
       });
     });
 
-    // Close on outside click
     document.addEventListener('click', function(e) {
-      if (!entry.querySelector('.battery-dropdown').contains(e.target)) {
-        list.classList.add('hidden');
-      }
+      if (!entry.querySelector('.battery-dropdown').contains(e.target)) list.classList.add('hidden');
     });
 
-    // Quantity change
-    entry.querySelector('.entry-qty').addEventListener('input', function() {
-      updateEntrySubtotal(entry);
-    });
-
-    // Price change (manual override)
-    entry.querySelector('.entry-price').addEventListener('input', function() {
-      updateEntrySubtotal(entry);
-    });
+    entry.querySelector('.entry-qty').addEventListener('input', () => updateEntrySubtotal(entry));
+    entry.querySelector('.entry-price').addEventListener('input', () => updateEntrySubtotal(entry));
   }
 
   function updateEntrySubtotal(entry) {
     const qty = parseInt(entry.querySelector('.entry-qty').value) || 1;
     const price = parseFloat(entry.querySelector('.entry-price').value) || 0;
-    const subtotal = price * qty;
-    entry.querySelector('.entry-subtotal').textContent = '₹' + subtotal.toFixed(2);
+    entry.querySelector('.entry-subtotal').textContent = '₹' + (price * qty).toLocaleString('en-IN');
     updateGrandTotal();
   }
 
   function updateGrandTotal() {
     let total = 0;
     document.querySelectorAll('.battery-entry').forEach(entry => {
-      const qty = parseInt(entry.querySelector('.entry-qty').value) || 1;
-      const price = parseFloat(entry.querySelector('.entry-price').value) || 0;
-      total += price * qty;
+      total += (parseInt(entry.querySelector('.entry-qty').value) || 1) * (parseFloat(entry.querySelector('.entry-price').value) || 0);
     });
-    document.getElementById('grandTotal').textContent = '₹' + total.toFixed(2);
+    document.getElementById('grandTotal').textContent = '₹' + total.toLocaleString('en-IN');
   }
 
-  // Clear battery selection
   window.clearMechBattery = function(btn) {
     const entry = btn.closest('.battery-entry');
     entry.querySelector('.battery-search').value = '';
@@ -382,21 +392,15 @@
     updateEntrySubtotal(entry);
   };
 
-  // ─── Add / Remove battery entries ──────────────────────────
   let entryCount = 1;
 
   document.getElementById('addBatteryBtn').addEventListener('click', function() {
     const container = document.getElementById('batteryEntries');
     const firstEntry = container.querySelector('.battery-entry');
     const clone = firstEntry.cloneNode(true);
-
     entryCount++;
     clone.dataset.index = entryCount - 1;
-
-    // Update label
-    clone.querySelector('.text-xs.font-semibold').textContent = 'Battery #' + entryCount;
-
-    // Clear values
+    clone.querySelector('.text-\\[10px\\].font-bold').textContent = 'Battery #' + entryCount;
     clone.querySelector('.battery-search').value = '';
     clone.querySelector('.battery-id-hidden').value = '';
     clone.querySelector('.battery-id-hidden').dataset.price = '0';
@@ -404,28 +408,19 @@
     clone.querySelector('.entry-qty').value = '1';
     clone.querySelector('.entry-price').value = '0';
     clone.querySelector('.entry-serial').value = '';
-    clone.querySelector('.entry-subtotal').textContent = '₹0.00';
-
-    // Show remove button
+    clone.querySelector('.entry-subtotal').textContent = '₹0';
     clone.querySelector('.remove-entry-btn').classList.remove('hidden');
-
-    // Show remove on first entry too (if now > 1)
     updateRemoveButtons();
-
     container.appendChild(clone);
-
-    // Re-init searchable dropdown for clone
     initBatterySearch(clone);
   });
 
   window.removeBatteryEntry = function(btn) {
-    const entry = btn.closest('.battery-entry');
-    entry.remove();
+    btn.closest('.battery-entry').remove();
     entryCount--;
-    // Re-number entries
     document.querySelectorAll('.battery-entry').forEach((e, i) => {
       e.dataset.index = i;
-      e.querySelector('.text-xs.font-semibold').textContent = 'Battery #' + (i + 1);
+      e.querySelector('.text-\\[10px\\].font-bold').textContent = 'Battery #' + (i + 1);
     });
     updateRemoveButtons();
     updateGrandTotal();
@@ -435,69 +430,35 @@
     const entries = document.querySelectorAll('.battery-entry');
     entries.forEach(e => {
       const btn = e.querySelector('.remove-entry-btn');
-      if (entries.length > 1) {
-        btn.classList.remove('hidden');
-      } else {
-        btn.classList.add('hidden');
-      }
+      entries.length > 1 ? btn.classList.remove('hidden') : btn.classList.add('hidden');
     });
   }
 
-  // ─── Form submit — validate + build JSON payload ───────────
   document.getElementById('creditSaleForm').addEventListener('submit', function(e) {
     const entries = document.querySelectorAll('.battery-entry');
     const batteries = [];
     let hasError = false;
-
     entries.forEach((entry, i) => {
       const batteryId = entry.querySelector('.battery-id-hidden').value;
       const qty = parseInt(entry.querySelector('.entry-qty').value) || 0;
       const serialStr = entry.querySelector('.entry-serial').value.trim();
       const serials = serialStr ? serialStr.split(',').map(s => s.trim()).filter(s => s) : [];
-
-      if (!batteryId) {
-        alert('Battery #' + (i+1) + ': Please select a battery.');
-        hasError = true;
-        return;
-      }
-      if (qty < 1) {
-        alert('Battery #' + (i+1) + ': Quantity must be at least 1.');
-        hasError = true;
-        return;
-      }
-      if (serials.length === 0) {
-        alert('Battery #' + (i+1) + ': Please enter at least one serial number.');
-        hasError = true;
-        return;
-      }
-      if (serials.length !== qty) {
-        alert('Battery #' + (i+1) + ': You entered ' + serials.length + ' serial(s) but quantity is ' + qty + '. They must match.');
-        hasError = true;
-        return;
-      }
-
-      batteries.push({
-        battery_id: batteryId,
-        quantity: qty,
-        serials: serials,
-        custom_price: parseFloat(entry.querySelector('.entry-price').value) || 0,
-      });
+      if (!batteryId) { alert('Battery #' + (i+1) + ': Please select a battery.'); hasError = true; return; }
+      if (qty < 1) { alert('Battery #' + (i+1) + ': Quantity must be at least 1.'); hasError = true; return; }
+      if (serials.length === 0) { alert('Battery #' + (i+1) + ': Please enter at least one serial number.'); hasError = true; return; }
+      if (serials.length !== qty) { alert('Battery #' + (i+1) + ': ' + serials.length + ' serial(s) entered but quantity is ' + qty + '.'); hasError = true; return; }
+      batteries.push({ battery_id: batteryId, quantity: qty, serials: serials, custom_price: parseFloat(entry.querySelector('.entry-price').value) || 0 });
     });
-
     if (hasError) { e.preventDefault(); return; }
     if (batteries.length === 0) { e.preventDefault(); alert('Add at least one battery.'); return; }
-
     document.getElementById('batteriesJson').value = JSON.stringify(batteries);
   });
 
-  // ─── Init first entry ──────────────────────────────────────
   initBatterySearch(document.querySelector('.battery-entry'));
 
-  // ─── Barcode / QR Scanner ──────────────────────────────────
+  // ─── Scanner ─────────────────────────────────────────────────
   let html5QrCode = null;
   let activeScanEntry = null;
-
-  // Delegate scan button clicks (works for dynamically added entries too)
   document.addEventListener('click', function(e) {
     const scanBtn = e.target.closest('.scan-btn');
     if (scanBtn) {
@@ -506,36 +467,21 @@
       startScanner();
     }
   });
-
   function startScanner() {
     html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 150 } },
-      function onScanSuccess(decodedText) {
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } },
+      function(decodedText) {
         if (activeScanEntry) {
-          const serialInput = activeScanEntry.querySelector('.entry-serial');
-          if (serialInput.value.trim()) {
-            serialInput.value += ', ' + decodedText;
-          } else {
-            serialInput.value = decodedText;
-          }
+          const si = activeScanEntry.querySelector('.entry-serial');
+          si.value = si.value.trim() ? si.value + ', ' + decodedText : decodedText;
         }
         closeScanner();
-      },
-      function onScanFailure(error) {}
-    ).catch(function (err) {
-      alert("Camera access denied. Please allow camera permission and try again.");
-      closeScanner();
-    });
+      }, function() {}
+    ).catch(() => { alert("Camera access denied."); closeScanner(); });
   }
-
   function closeScanner() {
     document.getElementById('scannerModal').classList.add('hidden');
-    if (html5QrCode) {
-      html5QrCode.stop().catch(() => {});
-      html5QrCode = null;
-    }
+    if (html5QrCode) { html5QrCode.stop().catch(() => {}); html5QrCode = null; }
     activeScanEntry = null;
   }
 </script>

@@ -3,169 +3,256 @@
 
 {% block content %}
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<h1 class="text-2xl font-bold mb-6">New Sale</h1>
 
-<form method="POST" action="/sales/add" id="saleForm"
-      class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-5 max-w-lg mx-auto">
-
-  <!-- ─── Customer Section ──────────────────────────────── -->
-  <div class="border-b border-gray-100 pb-5">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Customer Details</h2>
-
-    <!-- Phone lookup -->
-    <div>
-      <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-      <div class="flex gap-2">
-        <input type="tel" id="phone" name="phone" required placeholder="Enter 10-digit number"
-               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-        <button type="button" id="searchBtn"
-                class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium rounded-lg px-4 py-2 transition">
-          Search
-        </button>
-      </div>
-      <p id="customerStatus" class="mt-1 text-xs text-gray-400"></p>
-    </div>
-
-    <!-- Hidden customer ID (filled if existing customer found) -->
-    <input type="hidden" name="customer_id" id="customer_id" />
-    <!-- Flag: is this a new customer? -->
-    <input type="hidden" name="is_new_customer" id="is_new_customer" value="true" />
-
-    <!-- Existing customer info (shown when found) -->
-    <div id="existingCustomerInfo" class="hidden mt-3 bg-brand-50 border border-brand-100 rounded-lg p-4 space-y-1 text-sm">
-      <p><span class="text-gray-500">Name:</span> <strong id="custNameDisplay"></strong></p>
-      <p><span class="text-gray-500">Vehicle:</span> <span id="custVehicleDisplay"></span></p>
-      <p><span class="text-gray-500">Vehicle No:</span> <span id="custVehicleNumDisplay"></span></p>
-    </div>
-
-    <!-- New customer fields (shown when customer not found) -->
-    <div id="newCustomerFields" class="mt-3 space-y-4">
-      <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-        <input type="text" id="name" name="name" placeholder="e.g. Rajesh Kumar"
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      </div>
-      <div>
-        <label for="vehicle" class="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
-        <input type="text" id="vehicle" name="vehicle" placeholder="e.g. Maruti Swift"
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      </div>
-      <div>
-        <label for="vehicle_number" class="block text-sm font-medium text-gray-700 mb-1">Vehicle Number</label>
-        <input type="text" id="vehicle_number" name="vehicle_number" placeholder="e.g. MH 12 AB 1234"
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── Sale Section ──────────────────────────────────── -->
+<div class="flex items-center justify-between gap-3 mb-4">
   <div>
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Sale Details</h2>
-
-    <!-- Sale Date (DD/MM/YYYY) -->
-    <div class="mb-4">
-      <label for="sale_date" class="block text-sm font-medium text-gray-700 mb-1">Sale Date</label>
-      <input type="text" id="sale_date" name="sale_date" required
-             value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
-             pattern="\d{2}/\d{2}/\d{4}"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      <p class="mt-1 text-xs text-gray-400">Format: DD/MM/YYYY</p>
-    </div>
-
-    <!-- Battery Selection (Searchable) -->
-    <div class="mb-4">
-      <label for="battery_search" class="block text-sm font-medium text-gray-700 mb-1">Battery</label>
-      <div class="relative" id="batteryDropdown">
-        <input type="text" id="battery_search" autocomplete="off" placeholder="Search battery..."
-               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition pr-8" />
-        <input type="hidden" id="battery_id" name="battery_id" required />
-        <!-- Clear button -->
-        <button type="button" id="batteryClear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
-                onclick="clearBatterySelection()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-        <!-- Dropdown list -->
-        <ul id="batteryList" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-          {% for b in batteries %}
-          <li class="battery-option px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 transition-colors duration-100"
-              data-id="{{ b._id }}" data-price="{{ b.selling_price }}" data-old-value="{{ b.default_old_battery_value or 0 }}"
-              data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
-            <span class="font-medium">{{ b.brand }} {{ b.model }}</span>
-            <span class="text-gray-400 text-xs ml-1">(stock: {{ b.stock }})</span>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-
-    <!-- Serial Number with Scanner -->
-    <div class="mb-4">
-      <label for="serial_number" class="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
-      <div class="flex gap-2">
-        <input type="text" id="serial_number" name="serial_number" required placeholder="e.g. EX-2024-00123"
-               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-        <button type="button" id="scanBtn"
-                class="bg-gray-700 hover:bg-gray-800 text-white rounded-lg px-3 py-2 transition flex items-center"
-                title="Scan barcode / QR code">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Battery Price (actual full price) -->
-    <div class="mb-4">
-      <label for="actual_price" class="block text-sm font-medium text-gray-700 mb-1">Battery Price (₹)</label>
-      <input type="number" step="0.01" id="actual_price" name="actual_price" required min="0" placeholder="0.00"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      <p class="mt-1 text-xs text-gray-400">Full battery price before any exchange</p>
-    </div>
-
-    <!-- Old Battery Value -->
-    <div class="mb-4">
-      <label for="old_battery_value" class="block text-sm font-medium text-gray-700 mb-1">Old Battery Value (₹) <span class="text-gray-400 font-normal">— optional</span></label>
-      <input type="number" step="0.01" id="old_battery_value" name="old_battery_value" min="0" value="0" placeholder="0.00"
-             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition" />
-      <p class="mt-1 text-xs text-gray-400">Value of old battery exchanged by customer</p>
-    </div>
-
-    <!-- Final Amount Preview -->
-    <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
-      <span class="text-green-600 font-medium">Customer Pays:</span>
-      <span id="finalAmountPreview" class="font-bold text-green-700">₹0.00</span>
-    </div>
-
-    <!-- Payment Mode -->
-    <div class="mb-4">
-      <label for="payment_mode" class="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
-      <select id="payment_mode" name="payment_mode" required
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
-        <option value="Cash" selected>Cash</option>
-        <option value="UPI">UPI</option>
-        <option value="Card">Card</option>
-        <option value="Credit">Credit</option>
-      </select>
-    </div>
-
-    <!-- Service Type -->
-    <div class="mb-4">
-      <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
-      <select id="service" name="service" required
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-300 focus:border-brand-500 outline-none transition bg-white">
-        <option value="Installation" selected>Installation</option>
-        <option value="Charging">Charging</option>
-        <option value="Exchange">Exchange</option>
-      </select>
-    </div>
+    <h1 class="text-xl font-bold text-ink-900">New Sale</h1>
+    <p class="text-[12px] text-ink-500">Record a battery sale and generate an invoice</p>
   </div>
+  <a href="/sales/history" class="text-[12px] font-medium text-ink-500 hover:text-ink-800 transition">← History</a>
+</div>
 
-  <button type="submit"
-          class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm active:scale-95 hover:-translate-y-0.5 transition-all duration-200">
-    Record Sale
-  </button>
+<form method="POST" action="/sales/add" id="saleForm">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- ═══ LEFT: Customer ═══ -->
+    <div class="bg-white border border-ink-200 rounded-lg shadow-card">
+      <div class="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-brand-50 text-brand-600 text-[10px] font-bold">1</span>
+        <h2 class="text-[12px] font-bold text-ink-500 uppercase tracking-wider">Customer</h2>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <!-- Phone lookup -->
+        <div>
+          <label for="phone" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Phone Number</label>
+          <div class="flex gap-2">
+            <input type="tel" id="phone" name="phone" required placeholder="Enter 10-digit number"
+                   class="flex-1 border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+            <button type="button" id="searchBtn"
+                    class="bg-ink-900 hover:bg-ink-800 text-white text-[13px] font-semibold rounded-md px-4 py-2 transition whitespace-nowrap">
+              Search
+            </button>
+          </div>
+          <p id="customerStatus" class="mt-1.5 text-[11px] font-medium"></p>
+        </div>
+
+        <input type="hidden" name="customer_id" id="customer_id" />
+        <input type="hidden" name="is_new_customer" id="is_new_customer" value="true" />
+
+        <!-- Existing customer card -->
+        <div id="existingCustomerInfo" class="hidden bg-emerald-50 border border-emerald-200 rounded-md p-3 text-[13px]">
+          <div class="flex items-start justify-between">
+            <div class="space-y-0.5">
+              <p class="font-bold text-emerald-800" id="custNameDisplay"></p>
+              <p class="text-emerald-700"><span class="text-emerald-600">Vehicle:</span> <span id="custVehicleDisplay"></span></p>
+              <p class="text-emerald-700"><span class="text-emerald-600">Reg:</span> <span id="custVehicleNumDisplay"></span></p>
+            </div>
+            <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded">FOUND</span>
+          </div>
+        </div>
+
+        <!-- New customer fields -->
+        <div id="newCustomerFields" class="space-y-3">
+          <div>
+            <label for="name" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="e.g. Rajesh Kumar"
+                   class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="vehicle" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Vehicle</label>
+              <input type="text" id="vehicle" name="vehicle" placeholder="Maruti Swift"
+                     class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+            </div>
+            <div>
+              <label for="vehicle_number" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Reg No.</label>
+              <input type="text" id="vehicle_number" name="vehicle_number" placeholder="GJ 01 AB 1234"
+                     class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT: Sale Details ═══ -->
+    <div class="bg-white border border-ink-200 rounded-lg shadow-card">
+      <div class="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-accent-100 text-accent-700 text-[10px] font-bold">2</span>
+        <h2 class="text-[12px] font-bold text-ink-500 uppercase tracking-wider">Sale Details</h2>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <!-- Date + Battery in a row -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Sale Date -->
+          <div>
+            <label for="sale_date" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Date</label>
+            <input type="text" id="sale_date" name="sale_date" required
+                   value="{{ today }}" placeholder="DD/MM/YYYY" maxlength="10"
+                   pattern="\d{2}/\d{2}/\d{4}"
+                   class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          </div>
+          <!-- Spacer, battery takes full width below -->
+          <div class="flex items-end">
+            <p class="text-[11px] text-ink-500 pb-2">DD / MM / YYYY</p>
+          </div>
+        </div>
+
+        <!-- Battery Selection -->
+        <div>
+          <label for="battery_search" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Battery</label>
+          <div class="relative" id="batteryDropdown">
+            <div class="relative">
+              <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" id="battery_search" autocomplete="off" placeholder="Search battery..."
+                     class="w-full border border-ink-300 rounded-md pl-9 pr-8 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+              <button type="button" id="batteryClear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700 p-0.5 transition"
+                      onclick="clearBatterySelection()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <input type="hidden" id="battery_id" name="battery_id" required />
+            <ul id="batteryList" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-ink-200 rounded-md shadow-lg max-h-52 overflow-y-auto divide-y divide-ink-100">
+              {% for b in batteries %}
+              <li class="battery-option flex items-center justify-between px-3 py-2 text-[13px] cursor-pointer hover:bg-accent-50 transition-colors"
+                  data-id="{{ b._id }}" data-price="{{ b.selling_price }}" data-old-value="{{ b.default_old_battery_value or 0 }}"
+                  data-label="{{ b.brand }} {{ b.model }} (stock: {{ b.stock }})">
+                <div class="min-w-0">
+                  <span class="font-semibold text-ink-900">{{ b.brand }} {{ b.model }}</span>
+                  <span class="text-ink-500 text-[11px] ml-1.5">₹{{ "{:,.0f}".format(b.selling_price or 0) }}</span>
+                </div>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0
+                  {% if b.stock == 0 %}bg-rose-100 text-rose-700
+                  {% elif b.stock <= 2 %}bg-accent-100 text-accent-700
+                  {% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                  {{ b.stock }} left
+                </span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Serial Number -->
+        <div>
+          <label for="serial_number" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Serial Number</label>
+          <div class="flex gap-2">
+            <input type="text" id="serial_number" name="serial_number" required placeholder="e.g. EX-2024-00123"
+                   class="flex-1 border border-ink-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+            <button type="button" id="scanBtn"
+                    class="bg-ink-800 hover:bg-ink-700 text-white rounded-md px-3 py-2 transition flex items-center gap-1.5 text-[12px] font-medium shrink-0"
+                    title="Scan barcode">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+              Scan
+            </button>
+          </div>
+        </div>
+
+        <!-- Pricing row -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="actual_price" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Battery Price (₹)</label>
+            <input type="number" step="0.01" id="actual_price" name="actual_price" required min="0" placeholder="0"
+                   class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          </div>
+          <div>
+            <label for="old_battery_value" class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Old Bat. Value (₹)</label>
+            <input type="number" step="0.01" id="old_battery_value" name="old_battery_value" min="0" value="0" placeholder="0"
+                   class="w-full border border-ink-300 rounded-md px-3 py-2 text-sm tabular focus:ring-2 focus:ring-accent-400/40 focus:border-accent-500 outline-none transition" />
+          </div>
+        </div>
+
+        <!-- Customer Pays live preview -->
+        <div class="flex items-center justify-between bg-ink-900 text-white rounded-md px-4 py-2.5">
+          <span class="text-[12px] font-semibold text-ink-300">Customer Pays</span>
+          <span id="finalAmountPreview" class="text-lg font-bold tabular text-accent-400">₹0</span>
+        </div>
+
+        <!-- Payment Mode — segmented -->
+        <div>
+          <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Payment Mode</label>
+          <div class="grid grid-cols-4 gap-1.5" id="paymentModeGroup">
+            {% for mode in ['Cash', 'UPI', 'Card', 'Credit'] %}
+            <label class="payment-btn cursor-pointer">
+              <input type="radio" name="payment_mode" value="{{ mode }}" class="sr-only" {% if mode == 'Cash' %}checked{% endif %} />
+              <span class="flex items-center justify-center text-[12px] font-semibold py-2 rounded-md border border-ink-200 text-ink-600 hover:border-accent-400 hover:text-accent-700 transition select-none">{{ mode }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Service Type — segmented -->
+        <div>
+          <label class="block text-[11px] font-semibold text-ink-500 uppercase tracking-wider mb-1.5">Service Type</label>
+          <div class="grid grid-cols-3 gap-1.5" id="serviceTypeGroup">
+            {% for svc in ['Installation', 'Charging', 'Exchange'] %}
+            <label class="service-btn cursor-pointer">
+              <input type="radio" name="service" value="{{ svc }}" class="sr-only" {% if svc == 'Installation' %}checked{% endif %} />
+              <span class="flex items-center justify-center text-[12px] font-semibold py-2 rounded-md border border-ink-200 text-ink-600 hover:border-accent-400 hover:text-accent-700 transition select-none">{{ svc }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full bg-accent-500 hover:bg-accent-600 text-ink-900 font-bold rounded-md px-4 py-3 text-sm active:scale-[0.99] transition shadow-sm shadow-accent-500/20">
+          Record Sale & Generate Invoice →
+        </button>
+      </div>
+    </div>
+
+  </div>
 </form>
 
-<!-- ─── JavaScript ───────────────────────────────────────── -->
+<!-- ─── Scanner Modal ─── -->
+<div id="scannerModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-ink-950/70 backdrop-blur-sm" onclick="closeScanner()"></div>
+  <div class="relative mx-auto mt-16 max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-ink-100 bg-ink-50">
+      <h3 class="text-[13px] font-bold text-ink-900">Scan Barcode / QR Code</h3>
+      <button onclick="closeScanner()" class="text-ink-400 hover:text-ink-700 transition p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="qr-reader" style="width: 100%;"></div>
+    <p class="text-center text-[11px] text-ink-400 py-3">Point camera at the barcode or QR code</p>
+  </div>
+</div>
+
 <script>
+  // ─── Segmented button highlight ─────────────────────────────
+  function initSegmented(groupSelector, inputSelector) {
+    document.querySelectorAll(groupSelector + ' label').forEach(lbl => {
+      const input = lbl.querySelector('input');
+      const span = lbl.querySelector('span');
+      function updateStyle() {
+        const active = 'border-accent-500 bg-accent-500 text-ink-900';
+        const inactive = 'border-ink-200 text-ink-600';
+        if (input.checked) {
+          span.classList.add(...active.split(' '));
+          span.classList.remove(...inactive.split(' '));
+        } else {
+          span.classList.remove(...active.split(' '));
+          span.classList.add(...inactive.split(' '));
+        }
+      }
+      updateStyle();
+      input.addEventListener('change', () => {
+        document.querySelectorAll(groupSelector + ' label span').forEach(s => {
+          s.classList.remove('border-accent-500', 'bg-accent-500', 'text-ink-900');
+          s.classList.add('border-ink-200', 'text-ink-600');
+        });
+        span.classList.add('border-accent-500', 'bg-accent-500', 'text-ink-900');
+        span.classList.remove('border-ink-200', 'text-ink-600');
+      });
+    });
+  }
+  initSegmented('#paymentModeGroup', 'payment_mode');
+  initSegmented('#serviceTypeGroup', 'service');
+
+  // ─── Customer Search ─────────────────────────────────────────
   const searchBtn = document.getElementById('searchBtn');
   const phoneInput = document.getElementById('phone');
   const customerIdInput = document.getElementById('customer_id');
@@ -174,7 +261,6 @@
   const newFields = document.getElementById('newCustomerFields');
   const statusText = document.getElementById('customerStatus');
 
-  // Show new-customer fields by default
   function showNewCustomerMode() {
     existingInfo.classList.add('hidden');
     newFields.classList.remove('hidden');
@@ -192,27 +278,35 @@
     document.getElementById('custVehicleNumDisplay').textContent = data.vehicle_number;
   }
 
-  // Search button click
   searchBtn.addEventListener('click', function () {
     const phone = phoneInput.value.trim();
     if (!phone) return;
-
+    searchBtn.textContent = '…';
+    searchBtn.disabled = true;
     fetch('/customers/search?phone=' + encodeURIComponent(phone))
       .then(r => r.json())
       .then(data => {
+        searchBtn.textContent = 'Search';
+        searchBtn.disabled = false;
         if (data.found) {
           showExistingCustomerMode(data);
-          statusText.textContent = 'Existing customer found ✓';
-          statusText.className = 'mt-1 text-xs text-green-600 font-medium';
+          statusText.textContent = '✓ Existing customer found';
+          statusText.className = 'mt-1.5 text-[11px] font-medium text-emerald-600';
         } else {
           showNewCustomerMode();
-          statusText.textContent = 'New customer — fill in details below';
-          statusText.className = 'mt-1 text-xs text-amber-600 font-medium';
+          statusText.textContent = '+ New customer — fill details';
+          statusText.className = 'mt-1.5 text-[11px] font-medium text-accent-600';
         }
+      })
+      .catch(() => {
+        searchBtn.textContent = 'Search';
+        searchBtn.disabled = false;
       });
   });
 
-  // ── Searchable Battery Dropdown ─────────────────────────────
+  phoneInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchBtn.click(); } });
+
+  // ─── Searchable Battery Dropdown ────────────────────────────
   (function() {
     const searchInput = document.getElementById('battery_search');
     const hiddenInput = document.getElementById('battery_id');
@@ -220,7 +314,6 @@
     const clearBtn = document.getElementById('batteryClear');
     const options = list.querySelectorAll('.battery-option');
 
-    // Show dropdown and filter on input
     searchInput.addEventListener('input', function() {
       const q = this.value.toLowerCase();
       let hasVisible = false;
@@ -230,26 +323,21 @@
         if (match) hasVisible = true;
       });
       list.classList.toggle('hidden', !hasVisible);
-      // If user types, clear current selection
       hiddenInput.value = '';
       clearBtn.classList.add('hidden');
     });
 
-    // Show all on focus
     searchInput.addEventListener('focus', function() {
       options.forEach(opt => opt.style.display = '');
       list.classList.remove('hidden');
     });
 
-    // Select an option
     options.forEach(opt => {
       opt.addEventListener('click', function() {
         searchInput.value = this.dataset.label;
         hiddenInput.value = this.dataset.id;
         list.classList.add('hidden');
         clearBtn.classList.remove('hidden');
-
-        // Auto-fill price and old battery value
         const price = this.dataset.price;
         const oldVal = this.dataset.oldValue;
         if (price) document.getElementById('actual_price').value = price;
@@ -258,14 +346,12 @@
       });
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
       if (!document.getElementById('batteryDropdown').contains(e.target)) {
         list.classList.add('hidden');
       }
     });
 
-    // Clear selection
     window.clearBatterySelection = function() {
       searchInput.value = '';
       hiddenInput.value = '';
@@ -276,74 +362,49 @@
     };
   })();
 
-  // Live final amount preview
+  // ─── Live final amount ───────────────────────────────────────
   function updateFinalAmount() {
     const actual = parseFloat(document.getElementById('actual_price').value) || 0;
     const oldBat = parseFloat(document.getElementById('old_battery_value').value) || 0;
     const final_amt = actual - oldBat;
-    document.getElementById('finalAmountPreview').textContent = '₹' + final_amt.toFixed(2);
+    document.getElementById('finalAmountPreview').textContent = '₹' + final_amt.toLocaleString('en-IN');
   }
   document.getElementById('actual_price').addEventListener('input', updateFinalAmount);
   document.getElementById('old_battery_value').addEventListener('input', updateFinalAmount);
 
-  // Auto-format date as DD/MM/YYYY while typing
-  document.getElementById('sale_date').addEventListener('input', function (e) {
+  // ─── Date auto-format ────────────────────────────────────────
+  document.getElementById('sale_date').addEventListener('input', function() {
     let val = this.value.replace(/\D/g, '');
     if (val.length > 8) val = val.substring(0, 8);
-    if (val.length >= 5) {
-      this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
-    } else if (val.length >= 3) {
-      this.value = val.substring(0, 2) + '/' + val.substring(2);
-    } else {
-      this.value = val;
-    }
+    if (val.length >= 5) this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+    else if (val.length >= 3) this.value = val.substring(0, 2) + '/' + val.substring(2);
+    else this.value = val;
   });
 
-  // ─── Barcode / QR Scanner ───────────────────────────────
+  // ─── Scanner ─────────────────────────────────────────────────
   let html5QrCode = null;
-
-  document.getElementById('scanBtn').addEventListener('click', function () {
+  document.getElementById('scanBtn').addEventListener('click', function() {
     document.getElementById('scannerModal').classList.remove('hidden');
     startScanner();
   });
-
   function startScanner() {
     html5QrCode = new Html5Qrcode("qr-reader");
     html5QrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 150 } },
-      function onScanSuccess(decodedText) {
+      function(decodedText) {
         document.getElementById('serial_number').value = decodedText;
         closeScanner();
       },
-      function onScanFailure(error) {}
-    ).catch(function (err) {
+      function() {}
+    ).catch(function() {
       alert("Camera access denied. Please allow camera permission.");
       closeScanner();
     });
   }
-
   function closeScanner() {
     document.getElementById('scannerModal').classList.add('hidden');
-    if (html5QrCode) {
-      html5QrCode.stop().catch(() => {});
-      html5QrCode = null;
-    }
+    if (html5QrCode) { html5QrCode.stop().catch(() => {}); html5QrCode = null; }
   }
 </script>
-
-<!-- Scanner Modal -->
-<div id="scannerModal" class="fixed inset-0 z-50 hidden">
-  <div class="absolute inset-0 bg-black/60" onclick="closeScanner()"></div>
-  <div class="relative mx-auto mt-16 max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-      <h3 class="text-sm font-semibold text-gray-700">Scan Barcode / QR Code</h3>
-      <button onclick="closeScanner()" class="text-gray-400 hover:text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div id="qr-reader" style="width: 100%;"></div>
-    <p class="text-center text-xs text-gray-400 py-3">Point camera at the barcode or QR code</p>
-  </div>
-</div>
 {% endblock %}
