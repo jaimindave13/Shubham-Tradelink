@@ -114,4 +114,4 @@ A specialized accounting module tailored for local auto-mechanics who purchase o
 * **Secure Sessions:** Sessions are encrypted, `HttpOnly`, and `SameSite=Lax`.
 
 ---
-*Designed & Developed by [Jaimin Dave](https://github.com/jaimindave13)*
+*Designed & Developed by [Jaimin Dave](https://github.com/jaimindave13) • Built with the assistance of Claude Code.*
