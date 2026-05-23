@@ -1,33 +1,117 @@
-# Shubham Tradelink - Battery Shop Management System
+# 🔋 Shubham Tradelink — Battery Shop ERP & Management System
 
-This is a **Battery Shop Management System** built for "Shubham Tradelink". It is a web application developed using **Python (Flask)** on the backend, **MongoDB** for the database, and **Tailwind CSS** for modern, responsive frontend styling with built-in dark mode support.
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
+![Flask](https://img.shields.io/badge/Flask-Web_Framework-black?style=for-the-badge&logo=flask)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css)
+![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge&logo=pwa)
 
-## Application Sections
+A comprehensive, production-ready full-stack Enterprise Resource Planning (ERP) application custom-built for **Shubham Tradelink**, a retail battery business. 
 
-Here is an overall summary of the different sections and what you can do in each:
+This system digitizes manual pen-and-paper ledgers, offering a complete solution for inventory tracking, CRM, sales generation, warranty validation, and mechanic credit management.
 
-### 1. Dashboard (`/`)
-* **Purpose:** The central hub and landing page of the application.
-* **What it does:** Provides a high-level overview of the shop's daily operations. It displays key performance indicators, recent activities, or quick summaries of sales, stock, and outstanding credits to give a quick snapshot of the business.
+---
 
-### 2. Sales (`/sales`)
-* **Purpose:** Handling all billing and transactions.
-* **Sections:** 
-  * **New Sale (`/sales/add`):** Allows you to create a new battery sale, record the customer details, battery model, warranty given, and price.
-  * **Sales History (`/sales/history`):** A ledger of all past transactions. You can view past invoices and verify what was sold on a particular date.
+## ✨ Key Features
 
-### 3. Customers (`/customers`)
-* **Purpose:** Customer relationship management (CRM).
-* **What it does:** Allows you to maintain a directory of your customers. You can view customer details, their contact information, and their purchase history. This is helpful for recurring customers and ensuring you have contact details for warranty claims.
+* **Progressive Web App (PWA):** Installs as a standalone app on mobile devices for quick access on the shop floor.
+* **Secure Authentication:** Built-in session management, hashed passwords, and environment-driven credentials.
+* **Modern UI/UX:** Responsive, mobile-first design built with Tailwind CSS, featuring a polished dark/glassmorphic aesthetic.
+* **Robust Security:** Implements HTTP security headers (`X-Frame-Options`, `Content-Type-Options`), strict cookie policies, and cache control to prevent data leakage.
+* **Cloud-Ready:** Pre-configured for deployment on platforms like Render (`render.yaml` included) using MongoDB Atlas for a scalable NoSQL backend.
 
-### 4. Inventory / Stock (`/inventory`)
-* **Purpose:** Managing the physical stock of batteries in the shop.
-* **What it does:** Allows you to add, edit, or remove battery models from your catalogue. You can track quantities available to know when to restock, and it also manages specific details for each battery type, such as its brand and the default warranty period it carries.
+---
 
-### 5. Warranties (`/warranties`)
-* **Purpose:** Managing and verifying post-sale battery warranties.
-* **What it does:** Provides a dedicated interface to look up warranty statuses. For example, if a customer comes in with a faulty battery, this section allows you to quickly verify their initial purchase (e.g., via their phone number) and determine if the battery is still within its valid warranty period.
+## 🛠️ Technical Architecture
 
-### 6. Mechanics (`/mechanics`)
-* **Purpose:** Managing mechanic relationships and credit tracking (Khata).
-* **What it does:** A specialized section for local mechanics who buy batteries on behalf of their customers or on credit. You can register mechanics, track their ongoing credit balances, record payments they make against their balance, and manage their specific transaction history.
+### Tech Stack
+- **Backend:** Python 3.11+, Flask
+- **Database:** MongoDB Atlas (NoSQL) with `pymongo` and `certifi` for secure TLS connections.
+- **Frontend:** HTML5, Jinja2 Templating, Tailwind CSS (via CDN).
+- **Architecture:** Modular MVC-style architecture using Flask Blueprints for clean separation of concerns.
+
+### Project Structure
+```text
+├── app.py                 # Application factory & entry point
+├── config.py              # Environment variable & secret management
+├── models/                # Database connection singletons & schema logic
+├── routes/                # Modular Flask Blueprints (Sales, Auth, Inventory, etc.)
+├── static/                # Assets and PWA Service Worker
+├── templates/             # Jinja2 HTML views
+└── render.yaml            # IaC (Infrastructure as Code) for automated deployment
+```
+
+---
+
+## 💼 Business Modules
+
+### 1. 📊 Dashboard
+A centralized hub providing high-level metrics, daily sales snapshots, low-stock alerts, and outstanding mechanic credit balances at a glance.
+
+### 2. 🛒 Sales & Billing
+An intuitive Point-of-Sale (POS) interface. Record battery models sold, capture customer details instantly, calculate pricing, and issue digital invoices. Maintains a chronological ledger of all transactions.
+
+### 3. 👥 Customer Relationship Management (CRM)
+Maintain a searchable directory of customers. Track purchase history and contact information to streamline future support and marketing.
+
+### 4. 📦 Inventory Management
+Real-time stock tracking. Add, edit, or remove battery models, track brands, monitor stock levels, and set default warranty periods for automated calculation during sales.
+
+### 5. 🛡️ Warranty Claims
+A dedicated portal to instantly verify post-sale warranty validity. Search by customer phone number or invoice ID to seamlessly process replacements or repairs without digging through physical receipts.
+
+### 6. 🔧 Mechanic Ledger (Khata)
+A specialized accounting module tailored for local auto-mechanics who purchase on credit. Track running balances, log partial payments, and view detailed transaction histories for individual mechanics.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* Python 3.11+
+* A MongoDB Atlas cluster (or local MongoDB instance)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/jaimindave13/Shubham-Tradelink.git
+   cd Shubham-Tradelink
+   ```
+
+2. **Create and activate a virtual environment**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment Configuration**
+   Create a `.env` file in the root directory and configure your secrets:
+   ```env
+   MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/
+   DB_NAME=battery_shop
+   SECRET_KEY=your_super_secret_flask_key
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=your_secure_password
+   ```
+
+5. **Run the Application**
+   ```bash
+   python app.py
+   ```
+   The app will be available at `http://127.0.0.1:5000`.
+
+---
+
+## 🔒 Security Posture
+* **Zero Hardcoded Secrets:** All credentials are injected via environment variables.
+* **Sanitized Git History:** Repository is clean of `.env` files and sensitive git-tracked data.
+* **Secure Sessions:** Sessions are encrypted, `HttpOnly`, and `SameSite=Lax`.
+
+---
+*Designed & Developed by [Jaimin Dave](https://github.com/jaimindave13)*
